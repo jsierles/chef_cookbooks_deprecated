@@ -1,0 +1,25 @@
+if (-f $document_root/system/maintenance.html) {
+  set $maintenance 1;
+}
+
+<% if @node[:nginx][:maintenance][:bypass_ip_addresses] %>
+if ($remote_addr ~ ^<% @node[:nginx][:maintenance][:bypass_ip_addresses].join("|")%>$) {
+  set $maintenance 0;
+}
+<% end %>
+
+<% if @node[:nginx][:maintenance][:bypass_host_regex] %>
+if ($http_host ~ <%= @node[:nginx][:maintenance][:bypass_host_regex] %>) {
+  set $maintenance 0;
+}
+<% end %>
+
+error_page 503 @503;
+
+location @503 {
+  rewrite  ^(.*)$  /system/maintenance.html break;
+}
+
+if ($maintenance) {
+  return 503;
+}

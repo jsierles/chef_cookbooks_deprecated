@@ -1,0 +1,5 @@
+location ~ <%= @node[:nginx][:expires][:regex] %> {
+  expires <%= @node[:nginx][:expires][:time] %>;
+  add_header Cache-Control public;
+  break;
+}

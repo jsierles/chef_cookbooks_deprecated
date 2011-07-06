@@ -1,0 +1,8 @@
+error_page 400 /400;
+
+location = /400 {
+  if ($lb) {
+    access_log  off;
+  }
+  return 400;
+}

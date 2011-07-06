@@ -1,0 +1,8 @@
+  <% if @node[:hardware_lb_ip_addresses] %>
+  geo  $lb  {
+    default      0;
+    <% @node[:hardware_lb_ip_addresses].each do |ip| %>
+    <%= ip %>/32  1;
+    <% end %>
+  }
+  <% end %>
