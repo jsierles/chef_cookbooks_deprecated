@@ -1,15 +1,19 @@
-nginx_filename = [node[:nginx][:package_name], node[:nginx][:version], node[:nginx][:architecture]].join("_")+".deb"
+package "nginx"
 
-package "libossp-uuid16"
-package "libperl5.10"
-package "libgd2-noxpm"
-package "libxslt1.1"
-package "libgeoip1"
+# use this section for customized nginx packages
 
-dpkg_package node[:nginx][:package_name] do
-  source "/home/system/pkg/debs/#{nginx_filename}"
-  options "--force-confold"
-end
+# package "libossp-uuid16"
+# package "libperl5.10"
+# package "libgd2-noxpm"
+# package "libxslt1.1"
+# package "libgeoip1"
+# 
+# nginx_filename = [node[:nginx][:package_name], node[:nginx][:version], node[:nginx][:architecture]].join("_")+".deb"
+# 
+# dpkg_package node[:nginx][:package_name] do
+#   source "/home/system/pkg/debs/#{nginx_filename}"
+#   options "--force-confold"
+# end
 
 template "/etc/init.d/nginx" do
   source "init.sh.erb"

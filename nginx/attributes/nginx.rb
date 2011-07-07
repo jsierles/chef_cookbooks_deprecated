@@ -35,4 +35,5 @@ default.nginx[:ssl_session_cache][:size] = "50m"
 default.nginx[:proxy_read_timeout] = 180
 
 # set a regex to bypass maintenance mode for a particular http host
-# default.nginx[:maintenance][:bypass_host_regex] = "^some_host"
+default.nginx[:maintenance][:bypass_host_regex] = "^yourcompanysubdomain"
+default.nginx[:maintenance][:bypass_ip_addresses] = ["1.2.3.4"]
