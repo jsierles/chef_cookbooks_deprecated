@@ -1,0 +1,1 @@
+shadow.o : shadow.c $(hdrdir)/ruby.h $(hdrdir)/rubyio.h

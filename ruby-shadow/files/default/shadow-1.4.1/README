@@ -1,0 +1,79 @@
+Shadow Password module
+
+Copyright (C) 1998-1999 Takaaki Tateishi <ttate@jaist.ac.jp>
+Modified at: <1999/8/19 06:47:14 by ttate>
+License: Free for any use with your own risk!
+
+
+1. What's this
+
+This is the module which used when you access
+linux shadow password files.
+
+
+2. install
+
+ruby extconf.rb
+make
+(make install)
+
+* Note:
+  version 1.3 require the ruby-1.3 or later version.
+
+3. Shadow::Passwd module's methods
+
+getspent
+getspnam(name)
+setspent
+endspent
+fgetspent(file)
+sgetspent(str)
+putspent(entry,file)
+lckpwdf,lock
+ulckpwdf,unlock
+lock?
+
+4. Structure
+
+Shadow::Passwd::Entry (Struct::PasswdEntry)
+       sp_namp - pointer to null-terminated user name.
+       sp_pwdp - pointer to null-terminated password.
+       sp_lstchg  -  days  since  Jan  1,  1970 password was last
+                     changed.
+       sp_min - days before which password may not be changed.
+       sp_max - days after which password must be changed.
+       sp_warn - days before password is to expire that  user  is
+       warned of pending password expiration.
+       sp_inact  -  days  after  password expires that account is
+                    considered inactive and disabled.
+       sp_expire - days since Jan 1, 1970 when  account  will  be
+
+
+5. Description
+
+getspent,  getspname,  fgetspent and sgetspent each return
+a structure Shadow::Passwd::Entry.    getspent returns the
+next entry from the file,   and fgetspent returns the next
+entry from the given stream. sgetspent returns a structure
+Shadow::Passwd::Entry using the provided string as input.
+getspnam searches from the current position in the file for
+an entry matching name.
+if you get EOF from each operation, you will get nil.
+
+setspent and endspent may be used to begin and end, respe-
+ctively, access to the shadow password file.
+
+lckpwdf(lock) and ulckpwdf(unlock) methods should be used
+to insure exclusive access to the /etc/shadow file.
+when either method fail, Exception Shadow::FileLock is raised.
+if you use lock as the iterator, unlock is automatically called
+when you exit the iterator block.
+
+6. Reference
+
+* man shadow
+* /usr/include/shadow.h
+
+
+
+					ttate@jaist.ac.jp

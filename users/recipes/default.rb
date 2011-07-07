@@ -1,3 +1,5 @@
+require_recipe 'ruby-shadow'
+
 groups = search(:groups)
 
 groups.each do |group|

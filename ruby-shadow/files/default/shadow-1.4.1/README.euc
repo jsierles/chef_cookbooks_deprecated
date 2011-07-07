@@ -1,0 +1,80 @@
+Shadow Password module
+
+Copyright (C) 1998-1999 Takaaki Tateishi <ttate@jaist.ac.jp>
+Modified at: <1999/8/19 06:48:01 by ttate>
+License: Free for any use with your own risk!
+
+
+1. 概要
+
+linuxにおいてshadow passwordファイルを扱うため
+のモジュール。
+
+
+2. インストール
+
+ruby extconf.rb
+make
+make install
+
+* 注意
+  shadow-1.3ではruby-1.3もしくはそれ以降のバージョン
+  が必要です。
+
+3. Shadow::Passwdモジュールのメソッド達
+
+getspent
+getspnam(name)
+setspent
+endspent
+fgetspent(file)
+sgetspent(str)
+putspent(entry,file)
+lckpwdf,lock
+ulckpwdf,unlock
+lock?
+
+4. Structure
+
+Shadow::Passwd::Entry (Struct::PasswdEntry)
+       sp_namp - pointer to null-terminated user name.
+       sp_pwdp - pointer to null-terminated password.
+       sp_lstchg  -  days  since  Jan  1,  1970 password was last
+                     changed.
+       sp_min - days before which password may not be changed.
+       sp_max - days after which password must be changed.
+       sp_warn - days before password is to expire that  user  is
+       warned of pending password expiration.
+       sp_inact  -  days  after  password expires that account is
+                    considered inactive and disabled.
+       sp_expire - days since Jan 1, 1970 when  account  will  be
+
+
+5. 説明
+
+getspent, getspname, fgetspent, sgetspentはShadow::Passwd::Entry
+ストラクチャを返します。getspent はファイルから次のパスワ
+ードエントリを返し、fgetspent は与えられたIOから次のエント
+リを返します。sgetspentは与えられた文字列からShadow::Passwd::Entry
+ストラクチャを返します。getspnamはユーザ名を与えると/etc/shadow
+からそのユーザのShadow::Passwd::Entryストラクチャを返します。
+ファイルの終端に達するとnilの値を返します。
+
+setspent,endspentはそれぞれ、ファイルへのアクセスのはじめと
+おわりに使います。
+
+lckpwdf(lock),ulckpwdf(unlock)は/etc/shadowへの排他的アクセス
+を実現するためにあります。
+lockに失敗するとShadow::FileLockという例外を発生させます。
+lockをイテレータとして使うことによって、イテレータブロックを抜ける
+ときに自動的にunlockを行ないます。
+
+
+6. 参考
+
+* man shadow
+* /usr/include/shadow.h
+
+
+
+					ttate@jaist.ac.jp
