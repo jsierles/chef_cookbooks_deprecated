@@ -3,6 +3,7 @@ require_recipe "rails::app_dependencies"
 require_recipe "unicorn"
 require_recipe "bluepill"
 require_recipe "users"
+require_recipe "bundler"
 
 node[:active_applications].each do |name, conf|
   
