@@ -1,0 +1,50 @@
+#!/usr/local/bin/ruby
+#
+# Control a unicorn master process
+# See http://unicorn.bogomips.org/SIGNALS.html for an explanation of each signal
+#
+
+SIGNALS_MAP = {"restart" => "USR2", "force_shutdown" => "TERM", "graceful_shutdown" => "QUIT",
+               "reopen_logs" => "USR1", "restart_workers" => "HUP", "stop_workers" => "WINCH", "add_worker" => "TTIN", "remove_worker" => "TTOU"}
+
+def usage
+ puts "unicornctl <command> [pid_path]"
+ puts "Provide one of the following commands:"
+ puts SIGNALS_MAP.keys.join(", ")
+ puts 
+ puts "Pid path default relative to the current directory: tmp/pids/unicorn.pid"
+ exit
+end
+
+usage unless ARGV[0] && SIGNALS_MAP.keys.include?(ARGV[0])
+
+pid_path = ARGV[1] || Dir.pwd + "/tmp/pids/unicorn.pid"
+
+if File.exists?(pid_path)
+  old_pid = File.read(pid_path).strip
+  command = ARGV[0].downcase
+  
+  puts "Restarting pid #{old_pid}..."  
+  Process.kill(SIGNALS_MAP[command], File.read(pid_path).to_i)
+  
+  tries = 0
+  begin
+    sleep 2
+    new_pid = File.read(pid_path).strip
+  rescue => e
+    tries += 1
+    retry unless tries >= 3
+    puts "WARNING: Restart failed. Error: #{e.message}."
+  end
+  if new_pid == old_pid
+    if command == "restart"
+      puts "PID #{new_pid} has not changed, so the deploy may have failed. Check the unicorn log for issues."
+    else
+      puts "Since this app does not preload, the master unicorn process keeps the same PID of #{new_pid}."
+    end
+  else
+    puts "New pid is #{new_pid}."
+  end
+else
+  puts "WARNING: no pid file found at #{pid_path}"
+end

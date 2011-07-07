@@ -1,0 +1,35 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:             bluepill
+# Required-Start:       
+# Required-Stop:        
+# Default-Start:        2 3 4 5
+# Default-Stop:         1
+# Short-Description:    Bluepill initializer
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+case "$1" in
+  start)
+    log_daemon_msg "Starting bluepill services"
+    for i in <%= @node[:bluepill][:config_dir] %>/*conf.rb; do
+      <%= @node[:languages][:ruby][:bin_dir] %>/bluepill load $i
+    done
+    log_end_msg 0
+    ;;
+  stop)
+    echo "Stop is not implemented, since bluepill processes are run independently."
+    ;;
+  restart)
+    for i in <%= @node[:bluepill][:config_dir] %>/*conf.rb; do
+      <%= @node[:languages][:ruby][:bin_dir] %>/bluepill load $i
+    done
+    ;;
+  *)
+    log_action_msg "Usage: /etc/init.d/bluepill start"
+    exit
+esac
+
+exit 0

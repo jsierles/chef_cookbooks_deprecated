@@ -1,0 +1,30 @@
+ENV['PATH'] = "#{ENV['PATH']}:/usr/local/bin"
+
+Bluepill.application("<%= @name %>") do |app|
+  app.working_dir = "<%= @app_root %>"
+  <% if @environment_vars %>
+  app.environment = {<% @environment_vars.each do |k, v| %><%= "\"#{k}\" => \"#{v}\"" %><% end %>}
+  <% end %>
+  app.process("<%= @name %>") do |process|
+    process.start_command = "/usr/bin/env RAILS_ENV=<%= @env %> /usr/local/bin/bundle exec unicorn <%= @app_root %>/config.ru -Dc <%= @app_root %>/config/unicorn.conf.rb -E <%= @env %>"
+    process.stop_command = "kill -QUIT {{PID}}"
+    process.restart_command = "kill -<%= @preload ? 'USR2' : 'HUP' %> {{PID}}"
+    process.stdout = process.stderr = "<%= @app_root %>/log/unicorn.log"
+    process.pid_file = "<%= @app_root %>/tmp/pids/unicorn.pid"
+    process.checks :mem_usage, :every => 10.seconds, :below => <%= @memory_limit %>.megabytes, :times => [3, 5]
+    process.uid = "<%= @user %>"
+    process.gid = "<%= @group %>"
+
+    process.start_grace_time = 10.seconds
+    process.start_grace_time = 10.seconds
+    process.restart_grace_time = 10.seconds
+
+    process.checks :flapping, :times => 2, :within => 30.seconds, :retry_in => 7.seconds
+
+    process.monitor_children do |cp|
+      cp.checks :mem_usage, :every => 10, :below => <%= @memory_limit %>.megabytes, :times => [3, 5]
+      process.checks :cpu_usage, :every => 10.seconds, :below => <%= @cpu_limit %>, :times => 5
+      cp.stop_command = "kill -QUIT {{PID}}"
+    end
+  end
+end
