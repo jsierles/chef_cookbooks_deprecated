@@ -1,10 +1,12 @@
-if node[:active_applications]
-
-  directory "/u/apps" do
+["/u", "/u/apps"].each do |dir|
+  directory dir do
     owner "app"
     group "app"
     mode 0755
   end
+end
+
+if node[:active_applications]
   
   node[:active_applications].each do |name, conf|
 
