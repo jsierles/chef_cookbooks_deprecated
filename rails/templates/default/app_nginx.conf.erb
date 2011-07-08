@@ -3,72 +3,28 @@ upstream <%= @full_name %> {
 }
 
 server {
-  listen <%= @node[:rails][:nginx_port] %>;
-  server_name <%= @app[:environments][@conf[:env]][:domains].join(" ") %>;
-  server_name_in_redirect off;
-  
-  <% if @app[:rewrites] %>
-  <% @app[:rewrites].each do |path, args| %>
-  <% if args[:condition] -%>if (<%= args[:condition] %>) {<% end -%>
-  rewrite <%= path %> <%= args[:replacement] %> <%= args[:flag] %>;
-  <% if args[:condition] -%>}<% end -%>
-  <% end %>
-  <% end %>
-  
-  root /u/apps/<%= @app_name %>/current/public;
-
-  access_log	/u/apps/<%= @app_name %>/shared/log/access.log main;
-  error_log   /u/apps/<%= @app_name %>/shared/log/error.log;
-  
-  include /etc/nginx/helpers/expires.conf;
-  include /etc/nginx/helpers/maintenance.conf;
-  include /etc/nginx/helpers/invalid_requests.conf;
-  include /etc/nginx/helpers/headers.conf;
-
-  location /nginx_status {
-    stub_status on;
-    access_log off;
-    allow 127.0.0.1/32;
-    deny all;
-  }
-
-  location /_raindrops {
-    access_log off;
-    <% node[:networks].each do |name, addresses| %>
-    allow <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>;
-    <% end %>
-    allow 127.0.0.1/32;
-    deny all;
-    proxy_pass http://<%= @full_name %>;
-  }
-
-  location / {
-
-    # use for cloudfront asset cache busting
-    # rewrite  ^/rev_(.+?)/(.*)$ /$2 last;
-
-    proxy_buffer_size 16k;
-    proxy_buffers 8 16k;
-    proxy_busy_buffers_size 32k;
-
-    if (-f $request_filename) {
-       break;
-     }
-
-     if (!-f $request_filename) {
-       proxy_pass http://<%= @full_name %>;
-       break;
-     }
-   }
- 
-  error_page  500 502 503 504 /500.html;
-  error_page  404 /404.html;
-
-  location = /500.html {
-    root  /u/apps/<%= @app_name %>/current/public;
-  }
-
-  location = /400.html {
-    root  /u/apps/<%= @app_name %>/current/public;
-  }
+  listen 80;
+  include /etc/nginx/sites-include/<%= @full_name %>;
+  server_name <%= @non_ssl_domains.collect {|domain, _| domain }.join(" ") %>;
 }
+
+<% if @ssl_domains -%>
+<% @ssl_domains.collect { |domain, _| domain =~ /\*\.(.+)/ ? "#{$1}_wildcard" : domain }.each do |domain| -%>
+server {  
+  listen 443;
+  server_name domain;
+  
+  ssl on;
+  ssl_certificate /etc/ssl_certs/<%= domain %>_combined.crt;
+  ssl_certificate_key /etc/ssl_certs/<%= domain %>.key;
+
+  # for PCI compliance
+  ssl_protocols SSLv3 TLSv1;
+  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
+  
+  proxy_set_header X-Forwarded-Proto 'https';
+  
+  include /etc/nginx/sites-include/<%= @full_name %>;
+}
+<% end -%>
+<% end -%>

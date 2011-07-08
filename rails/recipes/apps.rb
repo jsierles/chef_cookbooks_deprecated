@@ -6,6 +6,11 @@ require_recipe "users"
 require_recipe "bundler"
 
 if node[:active_applications]
+  
+  directory "/etc/nginx/sites-include" do
+    mode 0755
+  end
+  
   node[:active_applications].each do |name, conf|
   
     app = search(:apps, "id:#{conf[:app_name] || name}").first
@@ -15,10 +20,22 @@ if node[:active_applications]
   
     full_name = "#{app_name}_#{conf[:env]}"
     filename = "#{filename}_#{conf[:env]}.conf"
-  
+
+    ssl_domains, non_ssl_domains = app[:environments][conf[:env]]["domains"].partition {|domain, opts| opts[:ssl] }
+
+    ssl_domains.each do |domain, _|
+      ssl_certificate domain
+    end
+
+    template "/etc/nginx/sites-include/#{full_name}" do
+      source "app_nginx_include.conf.erb"
+      variables :full_name => full_name, :conf => conf, :app_name => app_name
+      notifies :reload, resources(:service => "nginx")
+    end
+              
     template "/etc/nginx/sites-available/#{full_name}" do
       source "app_nginx.conf.erb"
-      variables :full_name => full_name, :app => app, :conf => conf, :app_name => app_name
+      variables :full_name => full_name, :conf => conf, :app_name => app_name, :ssl_domains => ssl_domains, :non_ssl_domains => non_ssl_domains
       notifies :reload, resources(:service => "nginx")
     end
   
