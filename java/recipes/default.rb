@@ -1,0 +1,1 @@
+package "sun-java6-jre"
