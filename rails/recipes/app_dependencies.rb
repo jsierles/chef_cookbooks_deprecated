@@ -14,7 +14,7 @@ if node[:active_applications]
     app_name = name
     app_root = "/u/apps/#{app_name}"
 
-    %w(config tmp sockets log pids system bin).each do |dir|
+    %w(config tmp sockets log tmp/pids system bin).each do |dir|
       directory "/u/apps/#{app_name}/shared/#{dir}" do
         recursive true
         owner "app"
