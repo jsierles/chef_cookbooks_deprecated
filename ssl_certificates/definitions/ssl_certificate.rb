@@ -5,8 +5,10 @@ define :ssl_certificate do
   end
   
   name = params[:name] =~ /\*\.(.+)/ ? "#{$1}_wildcard" : params[:name]
+  Chef::Log.info name
   # gsub is required since databags can't contain dashes
-  cert = search(:certificates, "name:#{name}").first
+  cert = Chef::EncryptedDataBagItem.load(:certificates, name.gsub(".", "_"))
+  Chef::Log.info cert["cert"]
   
   template "#{node[:ssl_certificates][:path]}/#{name}.crt" do
     source "cert.erb"
@@ -23,7 +25,7 @@ define :ssl_certificate do
     cookbook "ssl_certificates"
     owner "root"
     group "www-data"
-    variables :cert => cert[:key]
+    variables :cert => cert["key"]
   end
 
   template "#{node[:ssl_certificates][:path]}/#{name}_combined.crt" do
@@ -32,18 +34,18 @@ define :ssl_certificate do
     cookbook "ssl_certificates"
     owner "root"
     group "www-data"
-    extra = cert[:intermediate] || ""
-    variables :cert => cert[:cert], :extra => extra
+    extra = cert["intermediate"] || ""
+    variables :cert => cert["cert"], :extra => extra
   end
 
-  if cert[:intermediate]
+  if cert["intermediate"]
     template "#{node[:ssl_certificates][:path]}/#{name}_intermediate.crt" do
       source "cert.erb"
       mode "0640"
       cookbook "ssl_certificates"
       owner "root"
       group "www-data"
-      variables :cert => cert[:intermediate]
+      variables :cert => cert["intermediate"]
     end
   end
 end
