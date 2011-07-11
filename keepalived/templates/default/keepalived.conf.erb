@@ -1,0 +1,52 @@
+global_defs {
+   notification_email {
+     <%= @node[:keepalived][:notification_email] %>
+   }
+   notification_email_from <%= @node[:keepalived][:email_from] %>
+   smtp_server <%= @node[:keepalived][:smtp_host] %>
+   smtp_connect_timeout <%= @node[:keepalived][:smtp_timeout] %>
+   router_id <%= @node[:keepalived][:router_id] %>
+   lvs_id <%= @node[:keepalived][:lvs_id] %>
+}
+
+<% @node[:keepalived][:vrrp_instances].each do |name, vrrp| %> 
+vrrp_instance <%= name %> {
+    state <%= vrrp[:state] %>
+    interface <%= vrrp[:interface] %>
+    garp_master_delay <%= vrrp[:garp_master_delay] %>
+    <% if vrrp[:smtp_alert] %>smtp_alert<% end -%>
+    virtual_router_id <%= vrrp[:virtual_router_id] %>
+    priority <%= vrrp[:priority] %>
+    advert_int <%= vrrp[:advert_int] %>
+    authentication {
+        auth_type <%= vrrp[:auth_type] %>
+        auth_pass <%= vrrp[:auth_pass] %>
+    }
+    virtual_ipaddress {
+<% vrrp[:virtual_addresses].each do |addr| -%>
+        <%= addr %>
+<% end %>
+    }
+}
+<% end %>
+
+<% @node[:keepalived][:virtual_servers].each do |name, vs| %>
+# <%= name %>
+virtual_server <%= vs[:ip_address] %> <%= vs[:port] %> {
+    # TODO: move all these settings to chef
+    delay_loop 5
+    lb_algo wlc
+    lb_kind NAT
+    persistence_timeout 600
+    protocol TCP
+    <% vs[:real_servers].each do |name, rs| %>
+    # <%= name %>
+    real_server <%= rs[:ip_address] %> <%= rs[:port] %> {
+        weight 100
+        TCP_CHECK {
+            connect_timeout 3
+        }
+    }
+    <% end %>
+}
+<% end %>
