@@ -1,5 +1,6 @@
 execute "apt-get-update" do
   command "apt-get update"
+  action :nothing
 end
 
 # run this to grab GPG keys for enabled ppas
