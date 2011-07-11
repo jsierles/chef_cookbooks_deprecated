@@ -7,5 +7,5 @@ end
 
 template "/etc/apt/sources.list.d/ppas.list" do
   notifies :run, "execute[launchpad-update]", :immediately
-  notifies :run, "execute[apt-get-update]"
+  notifies :run, "execute[apt-get-update]", :immediately
 end

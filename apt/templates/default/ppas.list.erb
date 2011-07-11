@@ -1,4 +1,4 @@
 <% @node[:apt][:ppas].each do |name| %>
-deb http://ppa.launchpad.net/<%= @name %>/ubuntu lucid main
-deb-src http://ppa.launchpad.net/<%= @name %>/ubuntu lucid main
+deb http://ppa.launchpad.net/<%= name %>/ubuntu lucid main
+deb-src http://ppa.launchpad.net/<%= name %>/ubuntu lucid main
 <% end %>
