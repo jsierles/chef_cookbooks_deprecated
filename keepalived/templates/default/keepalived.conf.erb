@@ -18,10 +18,12 @@ vrrp_instance <%= name %> {
     virtual_router_id <%= vrrp[:virtual_router_id] %>
     priority <%= vrrp[:priority] %>
     advert_int <%= vrrp[:advert_int] %>
+    <% if vrrp[:auth_type] %>
     authentication {
         auth_type <%= vrrp[:auth_type] %>
         auth_pass <%= vrrp[:auth_pass] %>
     }
+    <% end %>
     virtual_ipaddress {
 <% vrrp[:virtual_addresses].each do |addr| -%>
         <%= addr %>
