@@ -88,5 +88,10 @@ local   all         postgres                          ident
 local   all             all                                     ident
 # IPv4 local connections:
 host    all             all             127.0.0.1/32            md5
+# IPv4 local network connections
+<% @node[:networks].each do |name, addresses| %>
+# <%= name %> network
+host    all             all             <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>           password
+<% end %>
 # IPv6 local connections:
 host    all             all             ::1/128                 md5
