@@ -5,10 +5,9 @@ define :ssl_certificate do
   end
   
   name = params[:name] =~ /\*\.(.+)/ ? "#{$1}_wildcard" : params[:name]
-  Chef::Log.info name
+
   # gsub is required since databags can't contain dashes
   cert = Chef::EncryptedDataBagItem.load(:certificates, name.gsub(".", "_"))
-  Chef::Log.info cert["cert"]
   
   template "#{node[:ssl_certificates][:path]}/#{name}.crt" do
     source "cert.erb"
