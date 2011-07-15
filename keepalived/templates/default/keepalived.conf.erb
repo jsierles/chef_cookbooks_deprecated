@@ -14,6 +14,8 @@ vrrp_instance <%= name %> {
     state <%= vrrp[:state] %>
     interface <%= vrrp[:interface] %>
     garp_master_delay <%= vrrp[:garp_master_delay] %>
+    # don't return master role once a slave becomes master (prevent flapping)
+    nopreempt
     <% if vrrp[:smtp_alert] %>smtp_alert<% end -%>
     virtual_router_id <%= vrrp[:virtual_router_id] %>
     priority <%= vrrp[:priority] %>
