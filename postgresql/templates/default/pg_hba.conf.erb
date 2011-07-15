@@ -85,13 +85,12 @@ local   all         postgres                          ident
 # TYPE  DATABASE        USER            CIDR-ADDRESS            METHOD
 
 # "local" is for Unix domain socket connections only
-local   all             all                                     ident
+local   all             all                                     trust
 # IPv4 local connections:
-host    all             all             127.0.0.1/32            md5
+host    all             all             127.0.0.1/32            trust
 # IPv4 local network connections
 <% @node[:networks].each do |name, addresses| %>
 # <%= name %> network
-host    all             all             <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>           password
+host    replication     postgres        <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>         trust
+host    all             all             <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>         trust
 <% end %>
-# IPv6 local connections:
-host    all             all             ::1/128                 md5

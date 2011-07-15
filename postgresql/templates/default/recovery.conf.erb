@@ -1,0 +1,5 @@
+standby_mode = 'on'
+primary_conninfo = 'host=<%= @node[:postgresql][:master_host] %> port=5433 user=postgres'
+trigger_file = '/var/lib/postgresql/<%= @node[:postgresql][:version] %>/pg_xlog_archive/stop.trigger'
+restore_command = 'cp /var/lib/postgresql/<%= @node[:postgresql][:version] %>/pg_xlog_archive/%f "%p"'
+archive_cleanup_command = 'pg_archivecleanup /var/lib/postgresql/<%= @node[:postgresql][:version] %>/pg_xlog_archive %r'
