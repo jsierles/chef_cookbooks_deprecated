@@ -25,7 +25,7 @@ template "#{node[:postgresql][:dir]}/postgresql.conf" do
   mode 0644
   
   # disabled to prevent accidental restarts in production
-  #notifies :restart, resources(:service => "postgresql")
+  # notifies :restart, resources(:service => "postgresql")
 end
 
 if node[:postgresql][:role] == "slave"
@@ -36,7 +36,7 @@ if node[:postgresql][:role] == "slave"
     mode 0644
     
     # disabled to prevent accidental restarts in production    
-    #notifies :restart, resources(:service => "postgresql")
+    # notifies :restart, resources(:service => "postgresql")
   end  
 else
   file "#{node[:postgresql][:dir]}/recovery.conf" do

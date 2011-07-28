@@ -1,29 +1,20 @@
-data_directory = '/var/lib/postgresql/9.0/main'		# use data in another directory
-					# (change requires restart)
-hba_file = '/etc/postgresql/9.0/main/pg_hba.conf'	# host-based authentication file
-					# (change requires restart)
-ident_file = '/etc/postgresql/9.0/main/pg_ident.conf'	# ident configuration file
-					# (change requires restart)
+data_directory = '/var/lib/postgresql/9.0/main'		# use data in another directory, change requires restart
+hba_file = '/etc/postgresql/9.0/main/pg_hba.conf'	# host-based authentication file, change requires restart
+ident_file = '/etc/postgresql/9.0/main/pg_ident.conf'	# ident configuration file, change requires restart
 
-external_pid_file = '/var/run/postgresql/9.0-main.pid'		# write an extra PID file
-					# (change requires restart)
+external_pid_file = '/var/run/postgresql/9.0-main.pid'		# write an extra PID file, change requires restart
 
-listen_addresses = '<%= node[:postgresql][:listen_addresses]%>'		# what IP address(es) to listen on;
-					# comma-separated list of addresses;
-					# defaults to 'localhost', '*' = all
-					# (change requires restart)
+listen_addresses = '<%= node[:postgresql][:listen_addresses]%>' # defaults to 'localhost', '*' = all, (change requires restart)
 port = 5433				# (change requires restart)
 max_connections = 100			# (change requires restart)
 
 unix_socket_directory = '/var/run/postgresql'		# (change requires restart)
 
-shared_buffers = 24MB			# min 128kB
-					# (change requires restart)
-					
+shared_buffers = 24MB			# min 128kB, change requires restart
+
 datestyle = 'iso, dmy'
 
-lc_messages = 'en_US.UTF-8'			# locale for system error message
-					# strings
+lc_messages = 'en_US.UTF-8'			# locale for system error message strings
 lc_monetary = 'en_US.UTF-8'			# locale for monetary formatting
 lc_numeric = 'en_US.UTF-8'			# locale for number formatting
 lc_time = 'en_US.UTF-8'				# locale for time formatting
@@ -33,7 +24,7 @@ default_text_search_config = 'pg_catalog.english'
 # replication setup: https://gist.github.com/6099e432763a63b61e59
 
 <% if @node[:postgresql][:role] == "slave" %>
-hot_standby = on # should not activate unless recovery.conf is present
+hot_standby = on # allows read-only queries while recovering. only active when recovery.conf is present.
 <% end %>
 
 <% if @node[:postgresql][:role] == "master" %>
