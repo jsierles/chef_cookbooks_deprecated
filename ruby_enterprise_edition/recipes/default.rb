@@ -1,5 +1,5 @@
 remote_file "/tmp/#{node[:ree][:filename]}" do
-  source "#{node[:ree][:base_url]}/#{node[:ree][:filename]}"
+  source "#{node[:package_url]}/#{node[:ree][:filename]}"
   not_if { File.exists?("/tmp/#{node[:ree][:filename]}") }
 end
 
