@@ -1,3 +1,5 @@
+require_recipe "users"
+
 ["/u", "/u/apps"].each do |dir|
   directory dir do
     owner "app"
