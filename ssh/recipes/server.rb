@@ -6,13 +6,14 @@ service "ssh" do
 end
 
 nodes = search(:node, "*:*")
+keys = search(:known_ssh_keys, "*:*")
 
 template "/etc/ssh/known_hosts" do
   source "known_hosts.erb"
   mode 0644
   owner "root"
   group "root"
-  variables(:nodes => nodes)
+  variables(:nodes => nodes, :known_ssh_keys => keys)
 end
 
 template "/etc/ssh/ssh_config" do
