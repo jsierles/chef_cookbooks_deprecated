@@ -1,0 +1,58 @@
+#!/bin/sh
+# Manage HAproxy for <%= @name %>
+#
+### BEGIN INIT INFO
+# Provides:          <%= @name %>
+# Required-Start:    $remote_fs
+# Required-Stop:     $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      1
+# Short-Description: HAproxy server for <%= @name %>
+# Description:       HAproxy server for <%= @name %>
+### END INIT INFO
+
+
+. /lib/lsb/init-functions
+
+NAME=<%= @name %>
+HAPROXY_BIN=/usr/sbin/haproxy
+HAPROXY_DIR=/etc/haproxy
+PID_FILE=/var/run/haproxy/${NAME}.pid
+PID_DIR=`dirname $PID_FILE`
+CONFIG=${HAPROXY_DIR}/${NAME}.cfg
+
+mkdir -p $PID_DIR
+chown <%= @node[:haproxy][:user] %>:<%= @node[:haproxy][:group] %> $PID_DIR
+
+ulimit -n 262144
+
+test -f ${CONFIG} || ( echo "Unable to find HAproxy configuration for ${NAME}. Aborting." && exit 0 )
+
+case "$1" in
+start)
+  log_daemon_msg "Starting HAproxy (${NAME})"
+  ${HAPROXY_BIN} -D -f ${CONFIG}
+  chmod 664 /var/run/haproxy/<%= @name %>.stats
+  chown <%= @node[:haproxy][:user] %>:<%= @node[:haproxy][:group] %> /var/run/haproxy/<%= @name %>.stats
+  log_end_msg $?
+  ;;
+stop)
+  log_daemon_msg "Stopping HAproxy (${NAME})"
+  kill `cat ${PID_FILE}`
+  log_end_msg $?
+  ;;
+restart)
+  log_daemon_msg "Forcefully restarting HAproxy (${NAME})"
+  ${HAPROXY_BIN} -D -f ${CONFIG} -st `cat ${PID_FILE}`
+  chmod 664 /var/run/haproxy/<%= @name %>.stats
+  chown <%= @node[:haproxy][:user] %>:<%= @node[:haproxy][:group] %> /var/run/haproxy/<%= @name %>.stats
+  log_end_msg $?
+  ;;
+reload)
+  log_daemon_msg "Gracefully restarting HAproxy (${NAME})"
+  ${HAPROXY_BIN} -D -f ${CONFIG} -sf `cat ${PID_FILE}`
+  chmod 664 /var/run/haproxy/<%= @name %>.stats
+  chown <%= @node[:haproxy][:user] %>:<%= @node[:haproxy][:group] %> /var/run/haproxy/<%= @name %>.stats
+  log_end_msg $?
+  ;;
+esac

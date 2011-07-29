@@ -1,0 +1,30 @@
+server {
+  listen <%= @vhost_vip %>:443;
+  ssl on;
+  
+  # for PCI compliance
+  ssl_protocols SSLv3 TLSv1;
+  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
+
+  ssl_certificate /etc/ssl_certs/<%= @certificate %>_combined.crt;
+  ssl_certificate_key /etc/ssl_certs/<%= @certificate %>.key;
+ 
+  set $forwarded_proto https;
+ 
+	proxy_read_timeout 300;
+	
+  location / {
+
+    if ($http_user_agent ~  HTTrack) { return 403; }
+
+    proxy_buffering off;
+    
+    proxy_set_header X-Forwarded-Proto 'https';
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Http-Authorization $http_authorization;
+    proxy_set_header Host $http_host;
+
+    proxy_pass http://<%= @proxy_vip %>:80;
+  }
+}

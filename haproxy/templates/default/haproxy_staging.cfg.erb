@@ -1,0 +1,67 @@
+global
+  log 10.10.0.13:10514 local1 info
+  maxconn 8000
+  user <%= @node[:haproxy][:user] %>
+  group <%= @node[:haproxy][:user] %>
+  pidfile /var/run/haproxy/haproxy.pid
+  stats socket /var/run/haproxy/haproxy.stats level admin
+
+defaults
+  log global
+  balance leastconn
+  option dontlognull
+  option redispatch
+  option forwardfor
+  option httplog
+  option httpclose
+  mode http
+  retries 3
+  contimeout <%= @node[:haproxy][:connection_timeout] %>
+  clitimeout <%= @node[:haproxy][:client_timeout] %>
+  srvtimeout <%= @node[:haproxy][:server_timeout] %>
+  errorfile 500 /etc/haproxy/500.http
+  errorfile 502 /etc/haproxy/500.http
+  errorfile 503 /etc/haproxy/500.http
+
+  listen haproxy_admin 0.0.0.0:<%= @node[:haproxy][:admin_port] %>
+    mode http
+    stats uri /
+
+  frontend haproxy 0.0.0.0:<%= @node[:haproxy][:listen_port] %>
+
+    capture request header X-Forwarded-For len 16
+    capture request header Host len 40
+    capture response header X-Uuid len 36
+
+<% @node[:haproxy][:instances].each do |name, config| -%>
+    acl <%= name %> hdr_end(Host) -i <%= config[:domains].collect {|d| d =~ /^\*/ ? d.gsub("*", "") : d }.join(" ") %>
+    
+    <% if config[:proxy_acls] %>
+    <% config[:proxy_acls].each do |acl_name, acl_config| -%>
+    acl <%= acl_name %> <%= acl_config[:rule] %>
+    use_backend <%= acl_config[:backend_name]%> <%= acl_config[:backend_conditions] %>
+    <% end -%>
+    <% end %>
+    use_backend <%= name %> if <%= name %>
+
+<% end -%>
+
+<% @node[:haproxy][:instances].each do |name, config| -%>
+    backend <%= name %>
+      <% if config[:monitoring] %>
+      option httpchk HEAD <%= config[:monitoring][:path] %> HTTP/1.1\r\nHost:\ <%= config[:monitoring][:host].split(".").insert(1, 'staging').join(".") %>
+      <% end -%>
+      <% config[:backend_hosts].each do |name, ipaddress| %>
+      server <%= name.gsub("-", "_") %> <%= ipaddress %>:<%= @node[:rails][:nginx_port] %> <% if config[:monitoring] %>check inter 5000<% end -%>
+      <% end -%>
+            
+    <% if config[:proxy_backends] %>
+    <% config[:proxy_backends].each do |name, servers| -%>
+    backend <%= name %>
+    <% servers.each do |server| -%>
+      <%= server %>
+    <% end -%>
+    <% end %>
+    <% end %>
+      
+<% end -%>

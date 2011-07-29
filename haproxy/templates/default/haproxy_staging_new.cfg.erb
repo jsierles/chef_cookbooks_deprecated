@@ -1,0 +1,63 @@
+global
+  log localhost local1 info
+  maxconn 8000
+  user <%= @node[:haproxy][:user] %>
+  group <%= @node[:haproxy][:user] %>
+  pidfile /var/run/haproxy/<%= @name %>.pid
+  stats socket /var/run/haproxy/<%= @name %>.stats level admin
+
+defaults
+  log global
+  balance leastconn
+  option dontlognull
+  option redispatch
+  option forwardfor
+  option httplog
+  option http-server-close
+  timeout http-keep-alive 8s
+  mode http
+  retries 3
+  contimeout <%= @node[:haproxy][:connection_timeout] %>
+  clitimeout <%= @node[:haproxy][:client_timeout] %>
+  srvtimeout <%= @node[:haproxy][:server_timeout] %>
+  errorfile 500 /etc/haproxy/500.http
+  errorfile 502 /etc/haproxy/500.http
+  errorfile 503 /etc/haproxy/500.http
+
+  frontend <%= @name %> <%= node[:proxy][:vip_prefix] %>.<%= @config[:proxy_vip_octet] %>:80
+
+    reqadd X-Forwarded-Proto:\ https if { src <%= node[:proxy][:vip_prefix] %>.<%= @config[:proxy_vip_octet] %>  }
+    capture request header X-Forwarded-For len 16
+    capture request header Host len 100
+    capture request header X-Request-Id len 36
+
+    <% if @config[:proxy_acls] %>
+    <% @config[:proxy_acls].each do |acl_name, acl_config| -%>
+    acl <%= acl_name %> <%= acl_config[:rule] %>
+    use_backend <%= acl_config[:backend_name]%> <%= acl_config[:backend_conditions] %>
+    <% end -%>
+    <% end %>
+
+    default_backend app_hosts
+
+    backend app_hosts
+      <% if @config[:monitoring] %>
+      option httpchk HEAD <%= @config[:monitoring][:path] %> HTTP/1.1\r\nHost:\ <%= @config[:monitoring][:host].split(".").insert(1, 'staging').join(".") %>
+      <% end -%>
+      <% @config[:backend_hosts].each do |name, ipaddress| %>
+      server <%= name.gsub("-", "_") %> <%= ipaddress %>:<%= @node[:rails][:nginx_port] %> <% if @config[:monitoring] %>check inter 5000<% end -%>
+      <% end -%>
+        
+    <% if @config[:proxy_backends] %>
+    <% @config[:proxy_backends].each do |backend_name, servers| -%>
+    backend <%= backend_name %>
+    <% servers.each do |server| -%>
+      <%= server %>
+    <% end -%>
+    <% end -%>
+    <% end -%>
+
+  listen <%= @name %>_admin <%= @node[:proxy][:vip_prefix] %>.<%= @config[:proxy_vip_octet] %>:<%= @node[:haproxy][:admin_port] %>
+    mode http
+    stats uri /
+    

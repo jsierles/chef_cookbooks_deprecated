@@ -1,0 +1,28 @@
+# haproxy - Haproxy server for <%= @name %>
+#
+
+description	"Haproxy server for <%= @name %>"
+
+start on started networking
+stop on runlevel [!2345]
+
+expect fork
+respawn
+respawn limit 50 15
+umask 022
+
+oom never
+
+pre-start script
+  mkdir -p /var/run/haproxy
+end script
+
+post-start script
+  chmod 664 /var/run/haproxy/<%= @name %>.stats
+  chown haproxy:haproxy /var/run/haproxy/<%= @name %>.stats
+end script
+
+script 
+  ulimit -n 262144
+  exec /usr/sbin/haproxy -D -f /etc/haproxy/<%= @name %>.cfg
+end script
