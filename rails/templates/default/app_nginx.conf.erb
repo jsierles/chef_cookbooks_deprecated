@@ -1,5 +1,9 @@
 upstream <%= @full_name %> {
+  <% if @app[:haproxy] -%>
+  server 127.0.0.1:<%= @node[:haproxy][:listen_port] %>;
+  <% else -%>
   server unix:/u/apps/<%= @app_name %>/shared/sockets/unicorn.sock fail_timeout=0;
+  <% end -%>
 }
 
 server {

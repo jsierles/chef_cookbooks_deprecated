@@ -35,24 +35,42 @@ if node[:active_applications]
               
     template "/etc/nginx/sites-available/#{full_name}" do
       source "app_nginx.conf.erb"
-      variables :full_name => full_name, :conf => conf, :app_name => app_name, :ssl_domains => ssl_domains, :non_ssl_domains => non_ssl_domains
+      variables :full_name => full_name, :conf => conf, :app_name => app_name, 
+                :ssl_domains => ssl_domains, :non_ssl_domains => non_ssl_domains, :app => app
       notifies :reload, resources(:service => "nginx")
     end
-  
-    bluepill_monitor full_name do
-      source "bluepill_unicorn.conf.erb"
-      app_root "#{app_root}/current"
-      preload app[:preload] || true
-      env conf[:env]
-      interval node[:rails][:monitor_interval]
-      user "app"
-      group "app"
-      memory_limit app[:memory_limit] || node[:rails][:memory_limit]
-      cpu_limit app[:cpu_limit] || node[:rails][:cpu_limit]
+
+    common_variables = {
+      :preload => app[:preload] || true,
+      :app_root => app_root,
+      :full_name => full_name,
+      :app_name => app_name,
+      :env => conf[:env],
+      :user => "app",
+      :group => "app",
+      :listen_port => app[:listen_port] || 8600
+    }
+
+    template "#{node[:unicorn][:config_path]}/#{full_name}" do
+      mode 0644
+      cookbook "unicorn"
+      source "unicorn.conf.erb"
+      variables common_variables
     end
 
-    nginx_site full_name
-
+    template "#{node[:bluepill][:conf_dir]}/#{full_name}.pill" do
+      mode 0644
+      source "bluepill_unicorn.conf.erb"
+      variables common_variables.merge(
+        :interval => node[:rails][:monitor_interval],
+        :memory_limit => app[:memory_limit] || node[:rails][:memory_limit],
+        :cpu_limit => app[:cpu_limit] || node[:rails][:cpu_limit])
+    end
+    
+    bluepill_service full_name do
+      action [:enable, :load, :start]
+    end
+    
     logrotate full_name do
       files "/u/apps/#{app_name}/current/log/*.log"
       frequency "daily"
@@ -60,6 +78,5 @@ if node[:active_applications]
       compress true
       restart_command "/etc/init.d/nginx reload > /dev/null"
     end
-
   end
 end
