@@ -1,6 +1,6 @@
 default.haproxy[:user] = "haproxy"
 default.haproxy[:group] = "haproxy"
-default.haproxy[:version] = "1.4.9-0ubuntu1~lucid~ppa1"
+default.haproxy[:version] = "1.4.8-0ubuntu1~lucid~ppa1"
 default.haproxy[:connection_timeout] = "5s"
 default.haproxy[:client_timeout] = "180s"
 default.haproxy[:server_timeout] = "180s"
