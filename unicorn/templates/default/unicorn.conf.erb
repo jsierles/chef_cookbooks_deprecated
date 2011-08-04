@@ -1,0 +1,42 @@
+app_root = "<%= @app_root %>"
+
+worker_processes 10
+working_directory "#{app_root}/current"
+preload_app <%= @preload ? "true" : "false" %>
+timeout 300
+listen "#{app_root}/shared/sockets/unicorn.sock", :backlog => 2048
+listen "0.0.0.0:<%= @listen_port %>"
+pid "#{app_root}/current/tmp/pids/unicorn.pid"
+stderr_path "#{app_root}/shared/log/unicorn.log"
+stdout_path "#{app_root}/shared/log/unicorn.log"
+
+if GC.respond_to?(:copy_on_write_friendly=)
+  GC.copy_on_write_friendly = true
+end
+
+before_fork do |server, worker|
+  old_pid = "#{server.config[:pid]}.oldbin"
+  if old_pid != server.pid
+    begin
+      sig = (worker.nr + 1) >= server.worker_processes ? :QUIT : :TTOU
+      Process.kill(sig, File.read(old_pid).to_i)
+    rescue Errno::ENOENT, Errno::ESRCH
+    end
+  end
+end
+
+after_fork do |server, worker|
+  if ENV['RAILS_ENV'] != 'development'
+    ENV["UNICORN_PROCTITLE"] = "<%= @app_name %> #{File.read("#{Rails.root}/REVISION")[0,6]}"
+    $0 = ENV["UNICORN_PROCTITLE"]
+  end
+
+  # Unicorn master loads the app then forks off workers -- because of the way
+  # Unix forking works, we need to make sure we aren't using any of the parent's
+  # sockets, e.g. db connections.
+  ActiveRecord::Base.establish_connection
+end
+
+before_exec do |server|
+  Dir.chdir("#{app_root}/current")
+end
