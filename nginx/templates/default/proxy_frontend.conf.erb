@@ -1,0 +1,34 @@
+<% @node[:nginx][:proxy_frontends].each do |domain, config| -%>
+
+server {
+  listen 443;
+  ssl on;
+  
+  server_name <%= domain %>;
+  
+  ssl_certificate /etc/ssl_certs/<%= config[:certificate] %>_combined.crt;
+  ssl_certificate_key /etc/ssl_certs/<%= config[:certificate] %>.key;
+
+  # for PCI compliance
+  ssl_protocols SSLv3 TLSv1;
+  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
+  
+	proxy_read_timeout 300;
+	
+  location / {
+
+    if ($http_user_agent ~  HTTrack) { return 403; }
+
+    proxy_buffering off;
+    
+    proxy_set_header X-Forwarded-Proto 'https';
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Http-Authorization $http_authorization;
+    proxy_set_header Host $http_host;
+
+    proxy_pass http://localhost:<%= @node[:haproxy][:listen_port] %>;
+  }
+}
+
+<% end -%>
