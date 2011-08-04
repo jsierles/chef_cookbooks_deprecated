@@ -3,6 +3,6 @@
 <% next unless n[:uptime] %>
 <%= n['hostname'] %>,<%= n['ipaddress'] %> ssh-rsa <%= n['keys']['ssh']['host_rsa_public'] %>
 <% end -%>
-<% @known_ssh_keys.each |name, conf| -%>
-<%= name %>,<%= conf['ipaddress'] %> ssh-rsa <%= conf['key'] %>
+<% @known_ssh_keys.each do |k| -%>
+<%= k['name'] %>,<%= k['ipaddress'] %> ssh-rsa <%= k['key'] %>
 <% end -%>
