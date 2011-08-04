@@ -2,19 +2,11 @@ gem_package "bluepill" do
   version node[:bluepill][:version]
 end
 
-directory node[:bluepill][:config_dir] do
-  owner "root"
-  group "root"
-end
-
-directory node[:bluepill][:log_dir] do
-  owner "root"
-  group "root"
-end
-
-directory node[:bluepill][:pid_dir] do
-  owner "root"
-  group "root"
+[node[:bluepill][:conf_dir], node[:bluepill][:log_dir], node[:bluepill][:pid_dir]].each do |dir|
+  directory dir do
+    owner "root"
+    group "root"
+  end
 end
 
 template "/etc/init.d/bluepill" do
