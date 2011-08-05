@@ -1,7 +1,7 @@
 Bluepill.application("<%= @full_name %>") do |app|
   app.process("<%= @short_name %>") do |process|
     process.start_command = "/usr/sbin/haproxy -D -f /etc/haproxy/<%= @short_name %>.cfg"
-    process.stop_command = "/usr/bin/kill -SIGUSR1 {{PID}}"
+    process.stop_command = "/bin/kill -SIGUSR1 {{PID}}"
     process.restart_command = "/usr/sbin/haproxy -D -f /etc/haproxy/<%= @short_name %>.cfg -sf {{PID}}"
     process.pid_file = "/var/run/haproxy/<%= @short_name %>.pid"
     process.stdout = process.stderr = "/var/log/haproxy.log"
