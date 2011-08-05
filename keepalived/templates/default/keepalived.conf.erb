@@ -9,6 +9,12 @@ global_defs {
    lvs_id <%= @node[:keepalived][:lvs_id] %>
 }
 
+vrrp_script chk_haproxy {
+  script "killall -0 haproxy"
+  interval 2
+  weight 2                
+}
+
 <% @node[:keepalived][:vrrp_instances].each do |name, vrrp| %> 
 vrrp_instance <%= name %> {
     state <%= vrrp[:state] %>
@@ -31,6 +37,11 @@ vrrp_instance <%= name %> {
         <%= addr %>
 <% end %>
     }
+    <% if vrrp[:track_haproxy] -%>
+    track_script {
+      chk_haproxy
+    }
+    <% end -%>
 }
 <% end %>
 
