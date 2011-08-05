@@ -15,6 +15,11 @@ vrrp_script chk_haproxy {
   weight 2                
 }
 
+vrrp_script chk_nginx {
+  script "killall -0 nginx"
+  interval 2
+  weight 2                
+}
 <% @node[:keepalived][:vrrp_instances].each do |name, vrrp| %> 
 vrrp_instance <%= name %> {
     state <%= vrrp[:state] %>
@@ -40,6 +45,11 @@ vrrp_instance <%= name %> {
     <% if vrrp[:track_haproxy] -%>
     track_script {
       chk_haproxy
+    }
+    <% end -%>
+    <% if vrrp[:track_nginx] -%>
+    track_script {
+      chk_nginx
     }
     <% end -%>
 }
