@@ -1,0 +1,59 @@
+daemonize yes
+pidfile <%= @pid_path %>
+port <%= @port %>
+bind <%= @bind_address %>
+timeout <%= @timeout %>
+logfile <%= @log_path %>
+loglevel notice
+
+logfile /var/log/redis/redis.log
+# syslog-enabled no
+# syslog-ident redis
+# syslog-facility local0
+
+databases <%= @databases %>
+rdbcompression yes
+dir <%= @data_directory %>
+dbfilename dump.rdb
+
+<% if @slave %>
+slaveof <%= @slave[:master_ip] %> <%= @slave[:port] || @port %>
+<% if @slave[:password] %>
+masterauth <%= @slave[:password] %>
+<% end %>
+slave-serve-stale-data yes
+<% end %>
+
+<% if @password %>
+requirepass <%= @password %>
+<% end %>
+
+<% if @max_clients %>
+maxclients <%= @max_clients %>
+<% end %>
+
+maxmemory <%= @max_memory.to_i * 1024 * 1024 %>
+
+maxmemory-policy volatile-lru 
+maxmemory-samples 3
+
+appendonly tes
+# appendfilename appendonly.aof
+appendfsync everysec
+no-appendfsync-on-rewrite no
+
+vm-enabled yes
+vm-swap-file /tmp/redis.swap
+vm-max-memory <%= @max_memory.to_i * 1024 * 1024 %>
+vm-page-size 32
+vm-pages 134217728
+vm-max-threads 4
+
+hash-max-zipmap-entries 512
+hash-max-zipmap-value 64
+
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+set-max-intset-entries 512
+
+activerehashing yes
