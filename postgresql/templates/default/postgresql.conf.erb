@@ -32,12 +32,10 @@ hot_standby = on # allows read-only queries while recovering. only active when r
 
 archive_mode = on 		# allows archiving to be done
 				# (change requires restart)
-archive_command = 'rsync -avH %p postgres@<%= @node[:postgresql][:slave_host] %>:/var/lib/postgresql/<%= @node[:postgresql][:version] %>/main/pg_xlog >/dev/null'	# command to use to archive a logfile segment
+archive_command = 'rsync -avH %p postgres@<%= @node[:postgresql][:slave_host] %>:<%= @node[:postgresql][:archive_dir] %> >/dev/null'	# command to use to archive a logfile segment
 
 # required if the slave needs to take read-only queries during failover
 wal_level = hot_standby
 max_wal_senders = 5
 
 <% end -%>
-
-wal_keep_segments = 32

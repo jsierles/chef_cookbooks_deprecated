@@ -1,10 +1,17 @@
 package "postgresql-#{node[:postgresql][:version]}"
 package "libpq-dev"
+package "postgresql-contrib"
 package "postgresql-server-dev-#{node[:postgresql][:version]}"
 
 include_recipe "postgresql::client"
 
 directory "/etc/postgresql" do
+  mode 0755
+  owner "postgres"
+  group "postgres"
+end
+
+directory "#{node[:postgresql][:data_dir]}/wal_archive" do
   mode 0755
   owner "postgres"
   group "postgres"
@@ -35,7 +42,7 @@ template "#{node[:postgresql][:config_dir]}/postgresql.conf" do
 end
 
 if node[:postgresql][:role] == "slave"
-  template "#{node[:postgresql][:datadir]}/recovery.conf" do
+  template "#{node[:postgresql][:data_dir]}/main/recovery.conf" do
     source "recovery.conf.erb"
     owner "postgres"
     group "postgres"
@@ -45,7 +52,7 @@ if node[:postgresql][:role] == "slave"
     # notifies :restart, resources(:service => "postgresql")
   end  
 else
-  file "#{node[:postgresql][:datadir]}/recovery.conf" do
+  file "#{node[:postgresql][:data_dir]}/main/recovery.conf" do
     action :delete
   end
 end
