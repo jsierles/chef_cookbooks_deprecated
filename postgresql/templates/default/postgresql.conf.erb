@@ -21,21 +21,12 @@ lc_time = 'en_US.UTF-8'				# locale for time formatting
 
 default_text_search_config = 'pg_catalog.english'
 
-# replication setup: https://gist.github.com/6099e432763a63b61e59
+# replication
 
-<% if @node[:postgresql][:role] == "slave" %>
-hot_standby = on # allows read-only queries while recovering. only active when recovery.conf is present.
-<% end %>
-
-<% if @node[:postgresql][:role] == "master" %>
-# Archiving
-
-archive_mode = on 		# allows archiving to be done
-				# (change requires restart)
-archive_command = 'rsync -avH %p postgres@<%= @node[:postgresql][:slave_host] %>:<%= @node[:postgresql][:archive_dir] %> >/dev/null'	# command to use to archive a logfile segment
-
-# required if the slave needs to take read-only queries during failover
 wal_level = hot_standby
-max_wal_senders = 5
+max_wal_senders = 10
+wal_keep_segments = 5000 # 80 GB
 
-<% end -%>
+hot_standby = on # allows read-only queries while recovering. only active when recovery.conf is present.
+archive_mode = on
+archive_command = 'cd .'
