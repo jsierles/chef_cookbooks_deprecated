@@ -1,9 +1,19 @@
+include_recipe "postgresql::client"
+
 package "postgresql-#{node[:postgresql][:version]}"
-package "libpq-dev"
-package "postgresql-contrib"
 package "postgresql-server-dev-#{node[:postgresql][:version]}"
 
-include_recipe "postgresql::client"
+%w(postgresql-contrib libpq-dev libxslt1-dev libxml2-dev libpam0g-dev libedit-dev).each {|p| package p }
+
+remote_file "/tmp/postgresql-repmgr-9.0_1.0.0.deb" do
+  source "#{node[:package_url]}/postgresql-repmgr-9.0_1.0.0.deb"
+  not_if { File.exists?("/tmp/postgresql-repmgr-9.0_1.0.0.deb") }
+end
+
+dpkg_package "postgresql-repmgr" do
+  source "/tmp/postgresql-repmgr-9.0_1.0.0.deb"
+  only_if { File.exists?("/tmp/postgresql-repmgr-9.0_1.0.0.deb") }
+end
 
 directory "/etc/postgresql" do
   mode 0755
