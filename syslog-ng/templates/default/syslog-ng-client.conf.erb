@@ -1,0 +1,39 @@
+options { 
+	chain_hostnames(off); 
+	sync(0); 
+	stats(43200); 
+	log_msg_size(65534);
+};
+
+source src {
+    unix-stream("/dev/log" max-connections(256));
+    internal();
+    pipe("/proc/kmsg");
+};
+
+<% if @node[:loggly][:enabled] == true %>
+destination d_loggly_system { tcp("logs.loggly.com", port(<%= @node[:loggly][:system_log_port] %>)); };
+destination d_loggly_app { tcp("logs.loggly.com", port(<%= @node[:loggly][:app_log_port] %>)); };
+<% end %>
+
+destination d_null { file("/dev/null.syslog"); };
+destination messages { file("/var/log/messages"); };
+
+# Block SyslogNG message overflow warnings
+filter f_syslog_overflow { program("syslog-ng") and match("length overflow"); };
+log { source(src); filter(f_syslog_overflow); destination(d_null); flags(final); };
+
+<% if @node[:active_applications] %>
+filter f_application { <%= @node[:active_applications].keys.map { |a| %W/program("#{a}")/ }.join(" or ") %>; };
+<% if @node[:loggly][:enabled] == true %>
+log { source(src); filter(f_application); destination(d_loggly_app); };
+<% else %>
+log { source(src); filter(f_application); destination(messages); flags(final); };
+<% end %>
+<% end %>
+
+<% if @node[:loggly][:enabled] == true %>
+log { source(src); destination(d_loggly_system); flags(final); };
+<% else %>
+log { source(src); destination(messages); flags(final); };
+<% end %>
