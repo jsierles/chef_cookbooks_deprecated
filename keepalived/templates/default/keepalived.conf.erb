@@ -20,13 +20,22 @@ vrrp_script chk_nginx {
   interval 2
   weight 2                
 }
+
+vrrp_script chk_postgres {
+  script "killall -0 postgres"
+  interval 2
+  weight 2                
+}
+
 <% @node[:keepalived][:vrrp_instances].each do |name, vrrp| %> 
 vrrp_instance <%= name %> {
     state <%= vrrp[:state] %>
     interface <%= vrrp[:interface] %>
     garp_master_delay <%= vrrp[:garp_master_delay] %>
+    <% if vrrp[:no_preempt] -%>
     # don't return master role once a slave becomes master (prevent flapping)
     nopreempt
+    <% end -%>
     <% if vrrp[:smtp_alert] %>smtp_alert<% end -%>
     virtual_router_id <%= vrrp[:virtual_router_id] %>
     priority <%= vrrp[:priority] %>
@@ -50,6 +59,11 @@ vrrp_instance <%= name %> {
     <% if vrrp[:track_nginx] -%>
     track_script {
       chk_nginx
+    }
+    <% end -%>
+    <% if vrrp[:track_postgres] -%>
+    track_script {
+      chk_postgres
     }
     <% end -%>
 }
