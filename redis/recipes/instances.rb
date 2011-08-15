@@ -5,11 +5,11 @@ if node[:redis][:instances]
 
     default_config = {
       "name" => "redis_#{name}",
-      "log_path" => "/u/redis/#{name}/redis.log",
-      "pid_path" => "/u/redis/#{name}/redis.pid",
-      "data_directory" => "/u/redis/#{name}/data",
-      "config_path" => "/u/redis/#{name}/redis.conf",
-      "root" => "/u/redis/#{name}",
+      "log_path" => "#{node[:redis][:root_path]}/#{name}/redis.log",
+      "pid_path" => "#{node[:redis][:root_path]}/#{name}/redis.pid",
+      "data_directory" => "#{node[:redis][:root_path]}/#{name}/data",
+      "config_path" => "#{node[:redis][:root_path]}/#{name}/redis.conf",
+      "root" => "#{node[:redis][:root_path]}/#{name}",
       "owner" => "redis",
       "group" => "redis"
     }
@@ -37,9 +37,14 @@ if node[:redis][:instances]
       mode 0644      
     end
 
-    bluepill_monitor merged_config["name"] do
+    template "#{node[:bluepill][:conf_dir]}/#{merged_config["name"]}.pill" do
+      mode 0644
       source "bluepill.conf.erb"
       variables merged_config
-    end    
+    end
+    
+    bluepill_service merged_config["name"] do
+      action [:enable, :load, :start]
+    end
   end
 end

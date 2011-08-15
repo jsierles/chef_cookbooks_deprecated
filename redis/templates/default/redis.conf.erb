@@ -3,21 +3,39 @@ pidfile <%= @pid_path %>
 port <%= @port %>
 bind <%= @bind_address %>
 timeout <%= @timeout %>
+
+<% if @syslog %>
+syslog-enabled yes
+syslog-ident <%= @name %>
+syslog-facility local0
+logfile stdout # sent to null when daemonized
+<% else %>
 logfile <%= @log_path %>
 loglevel notice
+<% end %>
 
 logfile /var/log/redis/redis.log
 # syslog-enabled no
 # syslog-ident redis
 # syslog-facility local0
 
+
+<% if @databases %>
 databases <%= @databases %>
 rdbcompression yes
 dir <%= @data_directory %>
 dbfilename dump.rdb
+<% end %>
+
+<% if @appendonly %>
+appendonly yes
+# appendfilename appendonly.aof
+appendfsync everysec
+no-appendfsync-on-rewrite no
+<% end %>
 
 <% if @slave %>
-slaveof <%= @slave[:master_ip] %> <%= @slave[:port] || @port %>
+slaveof <%= @slave[:master_ip] %> <%= @slave[:master_port] || @port %>
 <% if @slave[:password] %>
 masterauth <%= @slave[:password] %>
 <% end %>
@@ -33,15 +51,10 @@ maxclients <%= @max_clients %>
 <% end %>
 
 maxmemory <%= @max_memory.to_i * 1024 * 1024 %>
-
 maxmemory-policy volatile-lru 
 maxmemory-samples 3
 
-appendonly tes
-# appendfilename appendonly.aof
-appendfsync everysec
-no-appendfsync-on-rewrite no
-
+<% if @vm -%>
 vm-enabled yes
 vm-swap-file /tmp/redis.swap
 vm-max-memory <%= @max_memory.to_i * 1024 * 1024 %>
@@ -57,3 +70,4 @@ list-max-ziplist-value 64
 set-max-intset-entries 512
 
 activerehashing yes
+<% end -%>
