@@ -14,12 +14,6 @@ logfile <%= @log_path %>
 loglevel notice
 <% end %>
 
-logfile /var/log/redis/redis.log
-# syslog-enabled no
-# syslog-ident redis
-# syslog-facility local0
-
-
 <% if @databases %>
 databases <%= @databases %>
 rdbcompression yes

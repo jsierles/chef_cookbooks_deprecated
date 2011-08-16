@@ -9,6 +9,6 @@ default.redis[:max_memory] = "250"
 default.redis[:data_directory] = "/var/lib/redis"
 default.redis[:pid_path] = "/var/run/redis.pid"
 default.redis[:log_path] = "/var/log/redis/redis-server.log"
-
+default.redis[:syslog] = true
 # default to full durability persistence
 default.redis[:appendonly] = true
