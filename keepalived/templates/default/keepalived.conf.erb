@@ -27,6 +27,12 @@ vrrp_script chk_postgres {
   weight 2                
 }
 
+vrrp_script chk_redis {
+  script "killall -0 redis-server"
+  interval 2
+  weight 2                
+}
+
 <% @node[:keepalived][:vrrp_instances].each do |name, vrrp| %> 
 vrrp_instance <%= name %> {
     state <%= vrrp[:state] %>
@@ -51,23 +57,15 @@ vrrp_instance <%= name %> {
         <%= addr %>
 <% end %>
     }
-    <% if vrrp[:track_haproxy] -%>
+    <% if vrrp[:tracks] %>
+    <% vrrp[:tracks].each do |track| %>
     track_script {
-      chk_haproxy
+      chk_<%= track %>
     }
     <% end -%>
-    <% if vrrp[:track_nginx] -%>
-    track_script {
-      chk_nginx
-    }
-    <% end -%>
-    <% if vrrp[:track_postgres] -%>
-    track_script {
-      chk_postgres
-    }
     <% end -%>
 }
-<% end %>
+<% end -%>
 
 <% @node[:keepalived][:virtual_servers].each do |name, vs| %>
 # <%= name %>
