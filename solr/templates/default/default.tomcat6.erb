@@ -1,0 +1,30 @@
+# Run Tomcat as this user ID. Not setting this or leaving it blank will use the
+# default of tomcat6.
+TOMCAT6_USER=<%= @node[:tomcat][:user] %>
+
+# The home directory of the Java development kit (JDK). You need at least
+# JDK version 1.5. If JAVA_HOME is not set, some common directories for 
+# OpenJDK, the Sun JDK, and various J2SE 1.5 versions are tried.
+<% if @node[:tomcat].has_key?(:java_home) -%>
+JAVA_HOME=<%= @node[:tomcat][:java_home] %>
+<% end -%>
+
+# Directory for per-instance configuration files and webapps. It contains the
+# directories conf, logs, webapps, work and temp. See RUNNING.txt for details.
+# Default: /var/lib/tomcat6
+#CATALINA_BASE=/var/lib/tomcat6
+
+# Arguments to pass to the Java virtual machine (JVM).
+JAVA_OPTS="-Djava.awt.headless=true -Xmx<%= @node[:tomcat][:heap_size] %> -Xss<%= @node[:tomcat][:stack_size] %> <%= @node[:tomcat][:extra_options] %>"
+
+# Java compiler to use for translating JavaServer Pages (JSPs). You can use all
+# compilers that are accepted by Ant's build.compiler property.
+#JSP_COMPILER=jikes
+
+# Use the Java security manager? (yes/no, default: yes)
+# WARNING: Do not disable the security manager unless you understand
+# the consequences!
+TOMCAT6_SECURITY=no
+
+# Number of days to keep logfiles in /var/log/tomcat6. Default is 14 days.
+#LOGFILE_DAYS=14

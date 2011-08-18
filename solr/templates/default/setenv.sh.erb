@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+
+CATALINA_HOME=/usr/share/tomcat6
+export CATALINA_PID=<%= @node[:solr][:multi_tomcat_root] %>/<%= @app %>-solr/pids/tomcat6.pid
+
+# The first existing directory is used for JAVA_HOME (if JAVA_HOME is not
+# defined in $DEFAULT)
+JDK_DIRS="/usr/lib/jvm/java-6-openjdk /usr/lib/jvm/java-6-sun /usr/lib/jvm/java-1.5.0-sun /usr/lib/j2sdk1.5-sun /usr/lib/j2sdk1.5-ibm"
+
+# Look for the right JVM to use
+for jdir in $JDK_DIRS; do
+    if [ -r "$jdir/bin/java" -a -z "${JAVA_HOME}" ]; then
+	JAVA_HOME_TMP="$jdir"
+	# checks for a real JDK like environment, needed to check if 
+	# really the java-gcj-compat-dev package is installed
+	if [ -r "$jdir/bin/jdb" ]; then
+	    JAVA_HOME="$JAVA_HOME_TMP"
+	fi
+    fi
+done
+
+if [ -z "$JAVA_OPTS" ]; then
+	JAVA_OPTS="-Djava.awt.headless=true -Xmx<%= @config[:max_heap] %> -Xss<%= @config[:stack_size] %> <%= @config[:extra_options] %>"
+fi

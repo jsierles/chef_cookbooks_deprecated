@@ -10,3 +10,4 @@ TODO
 
 * LWRP or definition to simplify fetching and installing remote debian packages
 * Script to generate a skeleton top-level repository with example roles, data bags and an encrypted data bag secret
+* setup limits.conf for solr

@@ -1,0 +1,34 @@
+#!/bin/sh
+# Tomcat Startup Script
+
+TOMCAT_OWNER=app; export TOMCAT_OWNER
+
+ulimit -n 262144
+
+start() {
+        echo -n "Starting Tomcat:  "
+        su $TOMCAT_OWNER -c <%= @node[:solr][:multi_tomcat_root] %>/<%= @app %>-solr/bin/startup.sh
+        sleep 2
+}
+stop() {
+        echo -n "Stopping Tomcat: "
+        su $TOMCAT_OWNER -c <%= @node[:solr][:multi_tomcat_root] %>/<%= @app %>-solr/bin/shutdown.sh
+}
+
+# See how we were called.
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        stop
+        start
+        ;;
+  *)
+        echo $"Usage: tomcat {start|stop|restart}"
+        exit
+esac
+
