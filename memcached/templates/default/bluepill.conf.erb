@@ -1,0 +1,15 @@
+Bluepill.application("<%= @name %>") do |app|
+  app.process("<%= @name %>") do |process|
+    process.start_command = "touch <%= @pid_path %> && chown <%= @user %> <%= @pid_path %> && /usr/bin/memcached -d -P <%= @pid_path %> -m <%= @max_memory %> -p <%= @port %> -c <%= @max_connections %> -u <%= @user %>"
+    process.stop_command = "kill -QUIT {{PID}}"
+    process.pid_file = "<%= @pid_path %>"
+    process.uid = "<%= @user %>"
+    process.gid = "<%= @group %>"
+
+    process.start_grace_time = 10.seconds
+    process.start_grace_time = 5.seconds
+    process.restart_grace_time = 10.seconds
+
+    process.checks :flapping, :times => 2, :within => 30.seconds, :retry_in => 7.seconds
+  end
+end

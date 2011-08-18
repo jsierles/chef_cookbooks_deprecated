@@ -1,0 +1,3 @@
+#!/bin/sh
+exec 2>&1
+exec /usr/bin/memcached -u nobody -m <%= @max_memory %> -p <%= @port %> -u <%= @user %> -c <%= @max_connections %>
