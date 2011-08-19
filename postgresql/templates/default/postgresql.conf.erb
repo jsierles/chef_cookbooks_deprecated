@@ -25,7 +25,7 @@ default_text_search_config = 'pg_catalog.english'
 
 wal_level = hot_standby
 max_wal_senders = 5
-wal_keep_segments = 200 # ~ 3GB of saved wal segments for streaming replication
+wal_keep_segments = 5000 # ~ 80GB required for repmgr
 
 hot_standby = on # allows read-only queries while recovering. only active when recovery.conf is present.
 archive_mode = on
