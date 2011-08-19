@@ -3,6 +3,6 @@ local   all           all                                     trust
 host    all           all             127.0.0.1/32            trust
 
 <% @node[:networks].each do |name, addresses| %>
-host    replication   postgres        <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>         trust
+host    replication   all             <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>         trust
 host    all           all             <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>         trust
 <% end %>
