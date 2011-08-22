@@ -31,41 +31,6 @@ define service{
   check_command           check_mem
 }
 
-define service {
-  use                     default-service
-  hostgroup_name          dell, dell-perc-h700
-  service_description     Dell Hardware Status
-  check_command           check_nrpe!check_openmanage
-}
-
-
-# Fortigate Checks
-
-<% @fortigate_firewalls.each do |firewall| %>
-  define service{
-    use                     default-service
-    host_name               <%= firewall['fqdn'] %>
-    service_description     Fortigate Firewall CPU
-    check_command           check_fortigate_cpu!<%= @community %>!70!85
-  }
-
-  define service{
-    use                     default-service
-    host_name               <%= firewall['fqdn'] %>
-    service_description     Fortigate Firewall Memory
-    check_command           check_fortigate_memory!<%= @community %>!70!85
-  }
-    <% firewall['active_ports'].each do |port| %>
-    
-      define service {
-        use                     default-service
-        host_name               <%= firewall['fqdn'] %>
-        service_description     Fortigate Firewall Port <%= port %> Status
-        check_command           check_fortigate_port!<%= @community %>!<%= port %>
-      }
-    <% end %>
-<% end %>
-
 # Cisco Checks
 
 <% @cisco_switches.each do |switch| %>

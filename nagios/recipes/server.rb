@@ -1,6 +1,5 @@
 require_recipe "nginx"
 require_recipe "fcgiwrap"
-require_recipe  "runit"
 require_recipe "ssl_certificates"
 
 include_recipe "users"
@@ -15,6 +14,7 @@ package 'libnet-dns-perl'
 gem_package "xml-simple"
 gem_package "choice"
 
+gem_package "addressable"
 gem_package "tinder"
 gem_package "twilio"
 gem_package "xmpp4r-simple"
@@ -28,15 +28,15 @@ user "nagios" do
   shell "/bin/bash"
 end
 
-execute "copy distribution init.d script" do
-  command "mv /etc/init.d/nagios3 /etc/init.d/nagios3.dist"
-  creates "/etc/init.d/nagios3.dist"
+service "nagios3" do
+  supports [:reload, :restart]
 end
 
 directory "/u/nagios/.ssh" do
   mode 0700
   owner "nagios"
   group "nagios"
+  recursive true
 end
 
 htpasswd_file "/etc/nagios3/htpasswd.users" do
@@ -64,17 +64,15 @@ link "/bin/mail" do
   to "/usr/bin/mailx"
 end
 
-runit_service "nagios3"
-
-notifiers = search(:credentials, "id:notifiers").first
-sysadmin = search(:credentials, "id:sysadmin").first
-pager_duty_credentials = search(:credentials, "id:pager_duty").first
+sysadmin = Chef::EncryptedDataBagItem.load(:credentials, "sysadmin")
+pagerduty = Chef::EncryptedDataBagItem.load(:credentials, "pagerduty")
+campfire = Chef::EncryptedDataBagItem.load(:credentials, "campfire")
 
 sysadmin_users = search(:users, "groups:admin")
 
 nagios_conf "nagios" do
   config_subdir false
-  variables({:sysadmin => sysadmin})
+  variables :sysadmin => sysadmin
 end
 
 directory "#{node[:nagios][:root]}/dist" do
@@ -88,7 +86,6 @@ end
     owner "nagios"
     group "nagios"
     mode 0755
-    
   end
 end
 
@@ -115,6 +112,8 @@ role_list = begin
               {}
             end
 
+# TODO: find a better way to enumerate these without depending on their existence
+
 # device_types = [ "apc_pdu", "fortigate_firewall", "cisco_switch", "isilon_storage", "rac", "osx_server", "cisco_router"]
 # devices = search(:devices, "*:*")
 # cisco_switches = search(:devices, "type:cisco_switch")
@@ -125,12 +124,13 @@ role_list = begin
 # snmp = search(:credentials, "id:snmp").first
 # other_hosts = search(:nagios_hosts, "*:*")
 # no_ping_devices = search(:devices, "disable_ping:true")
-# proxy_servers = search(:node, "roles:proxy")
 # free_disk_disable_servers = search(:node, "nagios_free_disk_enable:false")
 # free_memory_disable_servers = search(:node, "nagios_free_memory_enable:false")
 # load_disable_servers = search(:node, "nagios_load_enable:false")
 # mysql_servers = search(:node, 'roles:shr-db')
-# apps = search(:apps, 'monitoring_enable:true')
+
+proxy_servers = search(:node, "roles:proxy")
+apps = search(:apps, 'monitoring_enable:true')
 
 nagios_conf "hostgroups" do
   variables({:roles => role_list, :device_types => device_types})
@@ -158,7 +158,6 @@ nagios_conf "templates"
 
 nagios_conf "commands" do
   variables :campfire => campfire
-  
 end
 
 nagios_conf "timeperiods"
@@ -168,7 +167,7 @@ nagios_conf "cgi" do
 end
 
 nagios_conf "pagerduty_nagios" do
-  variables(:credentials => pager_duty_credentials)
+  variables(:pagerduty => pagerduty)
 end
 
 proxy_instances = []
@@ -204,7 +203,6 @@ nagios_conf "services" do
     :fortigate_firewalls => fortigate_firewalls,
     :apc_pdus => apc_pdus,
     :isilon_storage_clusters => isilon_storage_clusters,
-    :community => snmp['community'],
     :devices => devices,
     :nodes => nodes,
     :other_hosts => other_hosts,
@@ -225,7 +223,7 @@ template "/etc/nagios3/nginx.conf" do
 end
 
 # install the wildcard cert for this domain
-ssl_certificate "*.#{node[:domain]}"
+#ssl_certificate "*.#{node[:domain]}"
 
 link "/usr/share/nagios3/htdocs/stylesheets" do
   to "/etc/nagios3/stylesheets"
@@ -233,4 +231,8 @@ end
 
 nginx_site "nagios" do
   config_path "/etc/nagios3/nginx.conf"
+end
+
+service "nagios3" do
+  action [:enable, :start]
 end

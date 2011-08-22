@@ -325,7 +325,7 @@ define command{
 
 define command{
         command_name    check_smtp_relay
-        command_line    $USER1$/check_smtp -H $HOSTADDRESS$ -e ESMTP -C "MAIL FROM: nagios@37signals.com" -R "250" -C "RCPT TO: system@highrisehq.com" -R "250"
+        command_line    $USER1$/check_smtp -H $HOSTADDRESS$ -e ESMTP -C "MAIL FROM: nagios@slash7.com" -R "250" -C "RCPT TO: system@highrisehq.com" -R "250"
         }
 
 define command{
@@ -546,7 +546,7 @@ define command{
   command_name  service-notify-by-sms-email
   command_line  /usr/bin/printf "%b" "$SERVICEDESC$ $SERVICESTATE$ $HOSTNAME$ $NOTIFICATIONTYPE$ $SERVICEOUTPUT$ : $NOTIFICATIONCOMMENT$" | /bin/mail -s "" $CONTACTPAGER$
   }
-g
+
 define command {
   command_name  service-notify-by-jabber
   command_line  <%= @node[:nagios][:notifiers_dir] %>/jabber -j $CONTACTADDRESS1$ -m "$SERVICEDESC$ $SERVICESTATE$ $HOSTALIAS$ $NOTIFICATIONTYPE$ $SERVICEOUTPUT$ : $NOTIFICATIONCOMMENT$"

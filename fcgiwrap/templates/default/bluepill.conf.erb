@@ -1,0 +1,8 @@
+Bluepill.application("fcgiwrap") do |app|
+  app.process("fcgiwrap") do |process|
+    process.start_command = "/usr/bin/spawn-fcgi -f /usr/local/sbin/fcgiwrap -a 127.0.0.1 -p <%= @port %> -P <%= @pid_file %> -u <%= @user %> -g <%= @group %>"
+    process.pid_file = "<%= @pid_file %>"
+    process.stdout = process.stderr = "/var/log/fcgiwrap.log"
+    process.daemonize = true
+  end
+end

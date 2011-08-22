@@ -6,8 +6,8 @@ define contact {
        host_notification_options       		d,r
        service_notification_commands		notify-service-by-pagerduty
        host_notification_commands		notify-host-by-pagerduty
-       address1					<%= @credentials[:subdomain] %>
-       address2					<%= @credentials[:service_key] %>
+       address1					<%= @pagerduty[:subdomain] %>
+       address2					<%= @pagerduty[:service_key] %>
        contactgroups    sysadmin-pagerduty
 }
 
