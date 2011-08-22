@@ -1,17 +1,9 @@
 server {
-  listen 443;
+  listen 80;
   server_name nagios nagios.<%= @node[:domain] %>;
   
   root <%= @node[:nagios][:webroot] %>;
-  
-  set $forwarded_proto https;
-  ssl on;
-  ssl_protocols SSLv3 TLSv1;
-  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
-  
-  ssl_certificate /etc/chef/certificates/chef.<%= @node[:domain] %>.crt;
-  ssl_certificate_key /etc/chef/certificates/chef.<%= @node[:domain] %>.key;
-  
+    
   include /etc/nginx/helpers/headers.conf;
 
   location / {
@@ -48,7 +40,7 @@ server {
     fastcgi_param  AUTH_USER      $remote_user;
     fastcgi_param  REMOTE_USER    $remote_user;
     
-    fastcgi_pass   127.0.0.1:47000;
+    fastcgi_pass   unix:/tmp/fcgiwrapper.sock;
     
   }
 }
