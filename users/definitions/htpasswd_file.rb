@@ -1,4 +1,4 @@
-define :htpasswd_file, :groups => [:git], :owner => "root", :group => "www-data" do
+define :htpasswd_file, :groups => [:admin], :owner => "root", :group => "www-data" do
   template params[:name] do
     cookbook "users"
     source "htpasswd.erb"
