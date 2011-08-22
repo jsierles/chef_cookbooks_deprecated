@@ -1,0 +1,172 @@
+# syslog-ng configuration file.
+#
+
+options {
+    time_reopen (10);
+    log_fifo_size (5000);
+    long_hostnames (off);
+    use_dns (yes);
+    dns_cache (yes);
+    dns_cache_size (2000);
+    dns_cache_expire (86400);
+    use_fqdn (no);
+    create_dirs (no);
+    keep_hostname (yes);
+    flush_lines (1);
+    stats_freq (600);
+};
+
+source s_sys {
+    file ("/proc/kmsg" log_prefix("kernel: "));
+    unix-stream ("/dev/log");
+    internal();
+};
+
+source s_remote {
+    udp(ip(0.0.0.0) port(514) so_rcvbuf(1024000));
+    tcp(ip(0.0.0.0) port(5140) max-connections(256) so_rcvbuf(1024000) so_keepalive(yes));
+};
+
+destination d_cons { file("/dev/console"); };
+destination d_mesg { file("/var/log/messages"); };
+destination d_auth { file("/var/log/secure"); };
+destination d_mail { file("/var/log/maillog" sync(10)); };
+destination d_spol { file("/var/log/spooler"); };
+destination d_boot { file("/var/log/boot.log"); };
+destination d_cron { file("/var/log/cron"); };
+destination d_mlal { usertty("*"); };
+
+#filter f_filter1  { facility(kern); };
+filter f_filter2   { level(info..emerg) and not facility(mail,authpriv,cron); };
+filter f_filter3   { facility(authpriv); };
+filter f_filter4   { facility(mail); };
+filter f_filter5   { level(emerg); };
+filter f_filter6   { facility(uucp) or (facility(news) and level(crit..emerg)); };
+filter f_filter7   { facility(local7); };
+filter f_filter8   { facility(cron); };
+filter f_local0    { facility(local0); };
+filter f_local1    { facility(local1); };
+filter f_local2    { facility(local2); };
+filter f_local3    { facility(local3); };
+filter f_local4    { facility(local4); };
+filter f_local5    { facility(local5); };
+filter f_local6    { facility(local6); };
+filter f_local7    { facility(local7); };
+filter user				 { facility(user); };
+
+filter f_exceptions { match("System Notifier"); };
+destination exceptions { file("/u/logs/exceptions.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_exceptions); destination(exceptions); };
+
+# Solr
+destination d_solr { file("/u/logs/syslog/solr", owner(root), group(app), perm(0640)); };
+log { source(s_remote); filter(f_local5); destination(d_solr); flags(final); };
+
+# filter HAProxy logs
+filter f_haproxy { program("haproxy"); };
+
+# filter Rails apps
+filter f_completed_in { match("Completed in"); };
+filter f_thumbnail_build { match("thumbnail\.build"); };
+filter f_memcache { match("MemCacheStore"); };
+filter f_uploader { match("Uploader"); };
+filter f_s3 { match("__s3__"); };
+filter f_rails_junk { not match("CACHE") and not match("SHOW TABLES") and not match("SHOW COLUMNS") and not match("SHOW FIELDS") and not match("SET SQL_AUTO_IS_NULL"); };
+
+# filter staging logs
+filter f_staging { host("staging-.*"); };
+
+<% @apps.each do |app| %>
+
+<% if app[:syslog_send_to_host] && @node[:ipaddress] != app[:syslog_send_to_host] %>
+# send <%= app[:id] %> logs to another host
+destination loghost_<%= app[:id] %> { tcp("<%= app[:syslog_send_to_host] %>", port(5140)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); destination(loghost_<%= app[:id] %>); };
+<% end %>
+
+<% app[:syslog_files] ||= Mash.new %>
+
+filter f_<%= app[:id] %>_haproxy { match("<%= app[:id] %>"); };
+
+<% sorted_environments = app[:environments].keys.sort.reverse %>
+<% sorted_environments.each do |env| %>
+
+<% if app[:environments][env][:domains] %>
+# <%= app[:id] %> <%= env %> Haproxy
+destination d_<%= app[:id] %>_<%= env %>_haproxy { file("/u/logs/<%= app[:id] %>/<%= env %>_haproxy.log", owner(app), group(app), perm(0640)); };
+filter f_<%= app[:id] %>_<%= env %>_haproxy { <%= app[:environments][env][:domains].map { |name, conf| %W/match("#{name.gsub('*', '')}")/ }.join(" or ") %>; };
+log { source(s_remote); filter(f_local1); filter(f_haproxy); filter(f_<%= app[:id] %>_haproxy); filter(f_<%= app[:id] %>_<%= env %>_haproxy); destination(d_<%= app[:id] %>_<%= env %>_haproxy); flags(final); };
+<% end %>
+<% end %>
+
+filter f_<%= app[:id] %> { program("<%= app[:id] %>"); };
+
+destination <%= app[:id] %>_staging { file("/u/logs/<%= app[:id] %>/staging.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_staging); destination(<%= app[:id] %>_staging); };
+
+<% if app[:syslog_files][:completed] %>
+destination <%= app[:id] %>_completed { file("/u/logs/<%= app[:id] %>/completed.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_completed_in); destination(<%= app[:id] %>_completed); };
+<% end %>
+
+<% if app[:syslog_files][:thumbnails] %>
+destination <%= app[:id] %>_thumbnails { file("/u/logs/<%= app[:id] %>/thumbnails.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_thumbnail_build); destination(<%= app[:id] %>_thumbnails); };
+<% end %>
+
+<% if app[:syslog_files][:memcache] %>
+destination <%= app[:id] %>_memcache { file("/u/logs/<%= app[:id] %>/memcache.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_memcache); destination(<%= app[:id] %>_memcache); };
+<% end %>
+
+<% if app[:syslog_files][:uploader] %>
+destination <%= app[:id] %>_uploader { file("/u/logs/<%= app[:id] %>/uploader.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_uploader); destination(<%= app[:id] %>_uploader); };
+<% end %>
+
+destination <%= app[:id] %>_s3 { file("/u/logs/<%= app[:id] %>/s3.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_s3); destination(<%= app[:id] %>_s3); };
+
+<% if app[:syslog_files][:logsort] -%>
+destination <%= app[:id] %>_logsort { program("/usr/local/bin/logsort.<%= app[:id] %>", log_fifo_size(30000)); };
+log { source(s_remote); filter(user); filter(f_<%= app[:id] %>); filter(f_rails_junk); destination(<%= app[:id] %>_logsort); flags(final); };	
+<% else -%>
+destination <%= app[:id] %> { file("/u/logs/<%= app[:id] %>/rails.log", owner(app), group(app), perm(0640)); };
+log { source(s_remote); filter(user); filter(f_<%= app[:id] %>); filter(f_rails_junk); destination(<%= app[:id] %>); flags(final); };
+<% end -%>
+
+<% end -%>
+
+# Standard system logging
+log { source(s_sys); filter(f_filter2); destination(d_mesg); };
+log { source(s_sys); filter(f_filter3); destination(d_auth); };
+log { source(s_sys); filter(f_filter4); destination(d_mail); };
+log { source(s_sys); filter(f_filter5); destination(d_mlal); };
+log { source(s_sys); filter(f_filter6); destination(d_spol); };
+log { source(s_sys); filter(f_filter7); destination(d_boot); };
+log { source(s_sys); filter(f_filter8); destination(d_cron); };
+
+# Bluepill Monitors
+filter f_bluepill { program("bluepilld"); };
+destination d_bluepill { file("/u/logs/syslog/bluepill", owner(root), group(app), perm(0640)); };
+log { source(s_remote); filter(f_local6); filter(f_bluepill); destination(d_bluepill); flags(final); };
+
+# Cisco Load Balancer
+destination d_cisco { file("/u/logs/syslog/cisco", owner(root), group(app), perm(0640)); };
+log { source(s_remote); filter(f_local6); destination(d_cisco); flags(final); };
+
+# Remote system logging
+destination d_mesg_remote { file("/u/logs/syslog/messages", owner(root), group(app), perm(0640)); };
+destination d_auth_remote { file("/u/logs/syslog/secure", owner(root), group(app), perm(0640)); };
+destination d_mail_remote { file("/u/logs/syslog/maillog", owner(root), group(app), perm(0640), sync(10)); };
+destination d_spol_remote { file("/u/logs/syslog/spooler", owner(root), group(app), perm(0640)); };
+destination d_boot_remote { file("/u/logs/syslog/boot.log", owner(root), group(app), perm(0640)); };
+destination d_cron_remote { file("/u/logs/syslog/cron", owner(root), group(app), perm(0640)); };
+
+log { source(s_remote); filter(f_filter2); destination(d_mesg_remote); };
+log { source(s_remote); filter(f_filter3); destination(d_auth_remote); };
+log { source(s_remote); filter(f_filter4); destination(d_mail_remote); };
+log { source(s_remote); filter(f_filter6); destination(d_spol_remote); };
+log { source(s_remote); filter(f_filter7); destination(d_boot_remote); };
+log { source(s_remote); filter(f_filter8); destination(d_cron_remote); };
+
