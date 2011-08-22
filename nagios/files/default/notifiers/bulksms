@@ -1,0 +1,65 @@
+#!/usr/local/bin/ruby
+
+require 'rubygems'
+require 'choice'
+require 'ruby-bulksms'
+
+Choice.options do
+    header ''
+    header 'Specific options:'
+
+    option :number do
+      short '-n'
+      long '--number=NUMBER'
+      desc 'The recipient phone number, e.g. 1312555555 (including country code, no spaces)'
+    end
+
+    option :username do
+      short '-u'
+      long '--username=USERNAME'
+      desc 'BulkSMS username'
+    end
+    
+    option :password do
+      short '-p'
+      long '--password=PASSWORD'
+      desc 'BulkSMS password'
+    end
+
+    option :message do
+      short '-m'
+      long '--message=MESSAGE'
+      desc 'Message to be sent'
+    end
+
+    option :country do
+      short '-c'
+      long '--country=COUNTRY'
+      desc 'Which country API to use: spain, uk, usa, international, safrica'
+    end
+    
+    separator ''
+    separator 'Common options: '
+
+    option :help do
+      long '--help'
+      desc 'Show this message'
+    end
+  end
+
+choices = Choice.choices
+
+service = Service.new(choices[:username], choices[:password], choices[:country])
+
+if choices
+  
+  if choices[:message].length > 160
+    messages = choices[:message].scan(/.{1,160}/)
+  else
+    messages = [choices[:message]]
+  end
+  
+  messages.each do |message|
+    service.send(message, choices[:number])
+  end
+end

@@ -1,0 +1,20 @@
+pid_file=/var/run/nrpe.pid
+server_port=5666
+nrpe_user=nagios
+nrpe_group=nagios
+dont_blame_nrpe=0
+debug=0
+command_timeout=60
+
+# loadavg, disk space
+command[check_load]=/usr/lib/nagios/plugins/check_load -w <%= @node[:nagios][:checks][:load][:warning] %> -c <%= @node[:nagios][:checks][:load][:critical] %>
+command[check_all_disks]=/usr/lib/nagios/plugins/check_disk -w <%= @node[:nagios][:checks][:free_disk][:warning] %>% -c <%= @node[:nagios][:checks][:free_disk][:critical] %>% -A -x /dev/shm -X nfs -i /boot
+command[check_mem]=/u/nagios/plugins/check_mem.sh -w <%= @node[:nagios][:checks][:free_memory][:warning] %> -c <%= @node[:nagios][:checks][:free_memory][:critical] %> -p
+
+command[check_bc_haproxy_queue]=/u/nagios/plugins/haproxy_stats.rb -w <%= @node[:nagios][:checks][:haproxy_queue][:warning] %> -c <%= @node[:nagios][:checks][:haproxy_queue][:critical] %> -p /u/apps/basecamp/shared/log/haproxy.stat -t backlog -b appname
+
+# Add checks for Solr index age.
+command[check_solr_index]=/usr/lib/nagios/plugins/check_file_age /u/solr/appname/data/index -w 2400 -c 3600
+command[check_hr_solr_index]=/usr/lib/nagios/plugins/check_file_age /u/solr/appname/data/index -w 3900 -c 5400
+
+

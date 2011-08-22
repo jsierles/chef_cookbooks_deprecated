@@ -1,0 +1,4 @@
+#!/bin/sh
+# set memory limit to 30MB
+exec 2>&1
+exec chpst -u nagios -U nagios <%= @node[:nagios][:bot_path] %> <%= @bot_data[:username] %> <%= @bot_data[:password] %> <%= @bot_data[:authorized_jids].join(",") %>

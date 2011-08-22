@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+#
+# Uses tinder to say things in a campfire room
+#
+#
+
+require 'rubygems'
+require 'clickatell'
+require 'choice'
+
+Choice.options do
+    header ''
+    header 'Specific options:'
+
+    option :number do
+      short '-n'
+      long '--number=NUMBER'
+      desc 'The recipient phone number, e.g. 1312555555 (including country code, no spaces)'
+    end
+
+    option :username do
+      short '-u'
+      long '--username=USERNAME'
+      desc 'Clickatell API username'
+    end
+    
+    option :password do
+      short '-p'
+      long '--password=PASSWORD'
+      desc 'Clickatell API password'      
+    end
+
+    option :message do
+      short '-m'
+      long '--message=MESSAGE'
+      desc 'Message to be sent'      
+    end
+    
+    option :api_id do
+      short '-a'
+      long '--api_id=API_ID'
+      desc 'Clickatell API identifier'          
+    end
+  
+    separator ''
+    separator 'Common options: '
+
+    option :help do
+      long '--help'
+      desc 'Show this message'
+    end
+  end
+
+choices = Choice.choices
+if choices
+  api = Clickatell::API.authenticate(choices[:api_id], choices[:username], choices[:password])
+  # split message up if it's longer than 153 characters
+  if choices[:message].length > 153
+    message_count = (choices[:message].length.to_f / 153).ceil
+    opts = {:concat => message_count}
+  else
+    opts = {}
+  end
+  puts "OPTIONS #{opts.inspect}"
+  api.send_message(choices[:number], choices[:message], opts)
+end

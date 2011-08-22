@@ -1,0 +1,4 @@
+#!/bin/sh
+
+exec 2>&1
+exec  <%= @node[:nagios][:bin_path] %> <%= @node[:nagios][:config_path] %>

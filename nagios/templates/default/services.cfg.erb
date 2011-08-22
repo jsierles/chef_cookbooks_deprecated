@@ -1,0 +1,330 @@
+define service {
+  use default-service
+  host_name *<% @no_ping_devices.each do |no_ping_device| %>,!<%= no_ping_device['fqdn'] %><% end %>
+  hostgroup_name !servers
+  service_description ping
+  first_notification_delay 20
+  check_command check_ping!100.0,20%!500.0,60%
+}
+
+define service {
+  use                     default-service
+  hostgroup_name          servers
+  host_name               <%= @free_disk_disable_servers.map { |v| "!#{v[:fqdn]}" }.compact.join(', ') %>
+  service_description     Free Space All Disks
+  check_command           check_all_disks
+}
+
+define service {
+  use                     default-service
+  hostgroup_name          servers
+  host_name               <%= @load_disable_servers.map { |v| "!#{v[:fqdn]}" }.compact.join(', ') %>
+  service_description     Load Average
+  check_command           check_load
+}
+
+define service{
+  use                     default-service
+  hostgroup_name          servers
+  host_name               <%= @free_memory_disable_servers.map { |v| "!#{v[:fqdn]}" }.compact.join(', ') %>
+  service_description     Free Memory
+  check_command           check_mem
+}
+
+define service {
+  use                     default-service
+  hostgroup_name          dell, dell-perc-h700
+  service_description     Dell Hardware Status
+  check_command           check_nrpe!check_openmanage
+}
+
+
+# Fortigate Checks
+
+<% @fortigate_firewalls.each do |firewall| %>
+  define service{
+    use                     default-service
+    host_name               <%= firewall['fqdn'] %>
+    service_description     Fortigate Firewall CPU
+    check_command           check_fortigate_cpu!<%= @community %>!70!85
+  }
+
+  define service{
+    use                     default-service
+    host_name               <%= firewall['fqdn'] %>
+    service_description     Fortigate Firewall Memory
+    check_command           check_fortigate_memory!<%= @community %>!70!85
+  }
+    <% firewall['active_ports'].each do |port| %>
+    
+      define service {
+        use                     default-service
+        host_name               <%= firewall['fqdn'] %>
+        service_description     Fortigate Firewall Port <%= port %> Status
+        check_command           check_fortigate_port!<%= @community %>!<%= port %>
+      }
+    <% end %>
+<% end %>
+
+# Cisco Checks
+
+<% @cisco_switches.each do |switch| %>
+  define service {
+    use                     default-service
+    host_name               <%= switch['fqdn'] %>
+    service_description     Cisco Stack Status
+    check_command           check_cisco_stack!<%= @community %>
+  }
+  
+  define service{
+    use                     default-service
+    host_name               <%= switch['fqdn'] %>
+    service_description     Cisco Switch CPU 5 min
+    check_command           check_cisco_cpu!<%= @community %>!1.3.6.1.4.1.9.2.1.58.0!60!80
+  }
+  
+  define service{
+    use                     default-service
+    host_name               <%= switch['fqdn'] %>
+    service_description     Cisco Switch CPU 1 min
+    check_command           check_cisco_cpu!<%= @community %>!1.3.6.1.4.1.9.2.1.57.0!60!80
+  }
+  
+  define service{
+    use                     default-service
+    host_name               <%= switch['fqdn'] %>
+    service_description     Cisco Switch CPU 5 sec
+    check_command           check_cisco_cpu!<%= @community %>!1.3.6.1.4.1.9.2.1.56.0!60!80
+  }
+		<% if switch['active_ports'] %>
+    <% switch['active_ports'].each do |port| %>
+    
+      define service {
+        use                     default-service
+        host_name               <%= switch['fqdn'] %>
+        service_description     Cisco <%= port %> Status
+        check_command           check_cisco!<%= @community %>!<%= port %>
+      }
+    <% end %>
+		<% end %>
+<% end %>
+
+<% @cisco_routers.each do |router| %>
+  
+  define service{
+    use                     default-service
+    host_name               <%= router['fqdn'] %>
+    service_description     Cisco Router CPU 5 min
+    check_command           check_cisco_cpu!<%= @community %>!1.3.6.1.4.1.9.2.1.58.0!60!80
+  }
+  
+  define service{
+    use                     default-service
+    host_name               <%= router['fqdn'] %>
+    service_description     Cisco Router CPU 1 min
+    check_command           check_cisco_cpu!<%= @community %>!1.3.6.1.4.1.9.2.1.57.0!60!80
+  }
+  
+  define service{
+    use                     default-service
+    host_name               <%= router['fqdn'] %>
+    service_description     Cisco Router CPU 5 sec
+    check_command           check_cisco_cpu!<%= @community %>!1.3.6.1.4.1.9.2.1.56.0!60!80
+  }
+		<% if router['active_ports'] %>
+    <% router['active_ports'].each do |port| %>
+    
+      define service {
+        use                     default-service
+        host_name               <%= router['fqdn'] %>
+        service_description     Cisco <%= port %> Status
+        check_command           check_cisco!<%= @community %>!<%= port %>
+      }
+    <% end %>
+		<% end %>
+<% end %>
+
+
+<% @nodes.each do |node| %>
+  <% if node[:nagios] && node[:nagios][:services] %>
+    <% node[:nagios][:services].each do |name, params| %>
+    define service {
+      host_name <%= node['hostname'] %>
+      <% params.each do |n, v| %>
+      <%= n %>  <%= v %>
+      <% end %>
+    }
+    <% end %>
+  <% end %>
+<% end %>
+
+<% if @devices %>
+<% @devices.each do |device| %>
+  <% if device[:services] %>
+    <% device[:services].reject { |k,v| k == 'id' }.each do |name, params| %>
+    define service {
+      host_name <%= device['fqdn'] %>
+      <% params.each do |n, v| %>
+      <%= n %>  <%= v %>
+      <% end %>
+    }
+    <% end %>
+  <% end %>
+<% end %>
+<% end %>
+
+<% if @devices %>
+<% @other_hosts.each do |host| %>
+  <% if host[:services] %>
+    <% host[:services].reject { |k,v| k == 'id' }.each do |name, params| %>
+    define service {
+      host_name <%= host['fqdn'] %>
+      <% params.each do |n, v| %>
+      <%= n %>  <%= v %>
+      <% end %>
+    }
+    <% end %>
+  <% end %>
+<% end %>
+<% end %>
+
+<% if @mysql_servers %>
+<% @mysql_servers.each do |mysql_server| %>
+
+  <% mysql_server['mysql']['instances'].each do |key, instance| %>
+
+	<% if mysql_server['hostname'].include?("staging-db")%>
+		<% mysql_notify_use = "default-service" %>
+	<% else %>
+		<% mysql_notify_use = "frequent-service" %>
+	<% end %>
+  
+define service{
+    use                 <%= mysql_notify_use %><% if mysql_notify_use == "frequent-service" %>-with-sms<% end %>
+    host_name           <%= mysql_server['hostname'] %>
+    service_description MySQL Uptime Check <%= key.capitalize %>
+    check_command       check_mysql_uptime!<%= instance['config']['port'] %>!<%= mysql_server['nagios']['mysql']['slave_check_password'] %>
+    servicegroups       mysql
+}
+
+define service{
+    use                 <%= mysql_notify_use %>
+    host_name           <%= mysql_server['hostname'] %>
+    service_description MySQL Long Running Processes <%= key.capitalize %>
+    check_command       check_mysql_long_procs!<%= instance['config']['port'] %>!<%= mysql_server['nagios']['mysql']['slave_check_password'] %>
+    servicegroups       mysql
+}
+
+define service{
+    use                 <%= mysql_notify_use %>
+    host_name           <%= mysql_server['hostname'] %>
+    service_description MySQL Lock Contention <%= key.capitalize %>
+    check_command       check_mysql_lock_contention!<%= instance['config']['port'] %>!<%= mysql_server['nagios']['mysql']['slave_check_password'] %>
+    servicegroups       mysql
+}
+
+<% if instance['mysql_role'] == "slave" || instance['perform_backups'] == true %>
+define service{
+    use                 default-service
+    host_name           <%= mysql_server['hostname'] %>
+    service_description MySQL Slave Lag <%= key.capitalize %>
+    check_command       check_mysql_slave_lag!<%= instance['config']['port'] %>!<%= mysql_server['nagios']['mysql']['slave_check_password'] %>
+    servicegroups       mysql
+}
+<% end %>
+
+<% if instance['mysql_role'] == "slave" %>
+define service{
+    use                 default-service
+    host_name           <%= mysql_server['hostname'] %>
+    service_description MySQL Slave Read Only <%= key.capitalize %>
+    check_command       check_mysql_readonly!<%= instance['config']['port'] %>!<%= mysql_server['nagios']['mysql']['slave_check_password'] %>
+    servicegroups       mysql
+}
+<% end %>
+<% if instance['slaves'] %>
+  <% instance['slaves'].each do |slave| %>
+    <% if slave['warm'] == true %>
+define service{
+    use                 default-service
+    host_name           <%= slave['host'] %>
+    service_description MySQL Slave Slave Warmer <%= key.capitalize %>
+    check_command       check_mysql_slave_warmer!<%= slave['port'] %>!<%= mysql_server['nagios']['mysql']['slave_check_password'] %>!<%= mysql_server['hostname'] %>!<%= key %>_production
+    servicegroups       mysql
+}
+    <% end %>
+  <% end %>
+<% end %>
+<% end %>
+<% end %>
+<% end %>
+
+<% @proxy_http_checks.each do |host, app_name, vip_prefix, proxy_vip_octet, monitoring_host, monitoring_path, monitoring_search_string, monitoring_check_ssl| %>
+
+<% if host.include?("staging")%>
+	<% http_notify_use = "default-service" %>
+<% else %>
+	<% http_notify_use = "frequent-service-with-sms" %>
+<% end %>
+
+define service{
+    use                 <%= http_notify_use %>
+    host_name           <%= host %>
+    service_description <%= app_name.capitalize %> Proxy HTTP Check
+    check_command       check_http_content_alt_ip!<%= vip_prefix %>.<%= proxy_vip_octet %>!<%= monitoring_host %>!<%= monitoring_path %>!<%= monitoring_search_string %>
+    servicegroups       http
+}
+
+  <% if monitoring_check_ssl == true %>
+define service{
+  	use                 <%= http_notify_use %>
+    host_name           <%= host %>
+    service_description <%= app_name.capitalize %> Proxy HTTPS Check
+    check_command       check_https_content_alt_ip!<%= vip_prefix %>.<%= proxy_vip_octet %>!<%= monitoring_host %>!<%= monitoring_path %>!<%= monitoring_search_string %>
+    servicegroups       http
+}
+  <% end %>
+<% end %>
+
+<% @app_server_http_checks.each do |host, app_name, monitoring_host, monitoring_path, monitoring_search_string| %>
+
+<% if host.include?("staging")%>
+	<% http_notify_use = "default-service" %>
+<% else %>
+	<% http_notify_use = "frequent-service-with-sms" %>
+<% end %>
+
+define service{
+		use                 <%= http_notify_use %>
+    host_name           <%= host %>
+    service_description <%= app_name.capitalize %> App Server HTTP Check
+    check_command       check_http_content!<%= monitoring_host %>!<%= monitoring_path %>!<%= monitoring_search_string %>
+    servicegroups       http
+}
+<% end %>
+
+<% @load_balancer_checks.each do |host, app_name, monitoring_host, monitoring_path, monitoring_search_string, monitoring_check_ssl| %>
+
+<% if host.include?("staging")%>
+	<% http_notify_use = "default-service" %>
+<% else %>
+	<% http_notify_use = "frequent-service-with-sms" %>
+<% end %>
+
+define service{
+		use                 <%= http_notify_use %>
+    host_name           <%= host %>
+    service_description <%= app_name.capitalize %> LB HTTP Check
+    check_command       check_http_content!<%= monitoring_host %>!<%= monitoring_path %>!<%= monitoring_search_string %>
+    servicegroups       http
+}
+  <% if monitoring_check_ssl == true %>
+define service{
+		use                 <%= http_notify_use %>
+    host_name           <%= host %>
+    service_description <%= app_name.capitalize %> LB HTTPS Check
+    check_command       check_https_content!<%= monitoring_host %>!<%= monitoring_path %>!<%= monitoring_search_string %>
+    servicegroups       http
+}
+  <% end %>
+<% end %>

@@ -1,0 +1,105 @@
+# Service Templates
+
+define service {
+  name                            default-service
+  active_checks_enabled           1
+  passive_checks_enabled          1
+  parallelize_check               1
+  obsess_over_service             1
+  check_freshness                 0
+  notifications_enabled           1
+  event_handler_enabled           1
+  flap_detection_enabled          1
+  failure_prediction_enabled      1
+  process_perf_data               1
+  retain_status_information       1
+  retain_nonstatus_information    1
+  is_volatile                     0
+  check_period                    24x7
+  max_check_attempts              <%= nagios_attr(:default_service)[:max_check_attempts] %>
+  check_interval                  <%= nagios_interval(nagios_attr(:default_service)[:check_interval]) %>
+  retry_interval                  <%= nagios_interval(nagios_attr(:default_service)[:retry_interval]) %>
+  contact_groups                  <%= nagios_attr(:default_contact_groups).join(",") %>
+  notification_options            w,u,c,r
+  notification_interval           <%= nagios_interval(nagios_attr(:default_service)[:notification_interval]) %>
+  notification_period             24x7
+  register                        0
+}
+
+define service {
+  register  0
+  name  frequent-service-with-sms
+  contact_groups  sysadmin, sysadmin-pagerduty
+  notification_options  u,c,r
+  notification_interval  0
+  use  frequent-service
+}
+
+define service {
+  register  0
+  normal_check_interval  5
+  name  frequent-service
+  max_check_attempts  3
+  use  default-service
+  retry_check_interval  20
+}
+
+define service {
+  register  0
+  name  service-with-sms
+  contact_groups  sysadmin, sysadmin-pagerduty
+  notification_options  u,c,r
+  normal_check_interval 300
+  use  default-service
+}
+
+define service {
+  register  0
+  normal_check_interval  300
+  name  local-service
+  max_check_attempts  4
+  retry_check_interval  60
+}
+
+define service {
+  register  0
+  name                    check-jabber
+  use                     default-service
+  service_description     jabber status
+  check_command           check_tcp!5222
+}
+
+define service {
+  register  0
+  name                    check-vnc
+  use                     default-service
+  service_description     vnc status
+  check_command           check_tcp!5900
+}
+
+define serviceescalation {
+  hostgroup_name          *
+  service_description     *
+  first_notification	    3
+  last_notification	      3
+  notification_interval	  300
+  escalation_options      w,c,u,r
+  contact_groups		      sysadmin-pagerduty, sysadmin
+}
+
+define hostescalation {
+	host_name		*
+	first_notification	3
+	last_notification	4
+	contact_groups		sysadmin-pagerduty, sysadmin
+}
+
+define servicegroup{
+	servicegroup_name	mysql
+	alias			MySQL Services
+}
+
+define servicegroup{
+	servicegroup_name	http
+	alias			HTTP Services
+}

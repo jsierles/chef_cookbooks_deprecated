@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+#
+#
+
+require 'rubygems'
+require 'choice'
+require 'drb'
+
+Choice.options do
+    header ''
+    header 'Specific options:'
+
+    option :jid do
+      short '-j'
+      long '--jid=JID'
+      desc 'The user JID'
+    end
+
+    option :message do
+      short '-m'
+      long '--message=MESSAGE'
+      desc 'The desired message'
+    end
+    
+    separator ''
+    separator 'Common options: '
+
+    option :help do
+      long '--help'
+      desc 'Show this message'
+    end
+  end
+
+choices = Choice.choices
+
+if choices[:jid] && choices[:message]
+  agent = DRbObject.new(nil, "druby://localhost:10370")
+  agent.deliver choices[:jid], choices[:message]
+end
+

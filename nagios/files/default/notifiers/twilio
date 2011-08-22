@@ -1,0 +1,81 @@
+#!/usr/local/bin/ruby
+
+require 'rubygems'
+require 'choice'
+require 'twiliolib'
+
+API_VERSION="2008-08-01"
+
+# Hide SSL certificate validation warnings.
+class Net::HTTP
+  alias_method :old_initialize, :initialize
+  def initialize(*args)
+    old_initialize(*args)
+    @ssl_context = OpenSSL::SSL::SSLContext.new
+    @ssl_context.verify_mode = OpenSSL::SSL::VERIFY_NONE
+  end
+end
+
+Choice.options do
+    header ''
+    header 'Specific options:'
+
+    option :number do
+      short '-n'
+      long '--number=NUMBER'
+      desc 'The recipient phone number, e.g. 1312555555 (including country code, no spaces)'
+    end
+
+    option :from do
+      short '-f'
+      long '--from=NUMBER'
+      desc 'The source phone number, must be a Twilio registered number'
+    end
+
+    option :account_id do
+      short '-a'
+      long '--account_id=ACCOUNT_ID'
+      desc 'Twilio account ID'
+    end
+    
+    option :token do
+      short '-t'
+      long '--token=TOKEN'
+      desc 'Twilio account token'
+    end
+
+    option :message do
+      short '-m'
+      long '--message=MESSAGE'
+      desc 'Message to be sent'
+    end
+    
+    separator ''
+    separator 'Common options: '
+
+    option :help do
+      long '--help'
+      desc 'Show this message'
+    end
+  end
+
+choices = Choice.choices
+if choices
+  
+  if choices[:message].length > 160
+    messages = choices[:message].scan(/.{1,160}/)
+  else
+    messages = [choices[:message]]
+  end
+  
+  messages.each do |message|
+    args = {
+      'To' => choices[:number],
+      'From' => choices[:from],
+      'Body' => message
+    }  
+  
+    account = Twilio::RestAccount.new(choices[:account_id], choices[:token])
+    STDERR.puts account.request("/#{API_VERSION}/Accounts/#{choices[:account_id]}/SMS/Messages", "POST", args).inspect
+  end
+end

@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+#
+# Detect hung passenger processes and 
+#
+
+active_pids = `passenger-status | awk '{print $2}' | xargs`.split
+all_pids = `ps auwx | grep Rails | grep -v grep | awk '{print $2}' | xargs`.split
+
+busted_pids = all_pids - active_pids
+  
+if busted_pids.empty?
+  puts "OK: No hung passenger processes"
+  exit 0
+else
+  puts "CRITICAL: #{busted_pids.size} hung passenger processes with pids #{busted_pids.join(' ')}"
+  exit 2
+end

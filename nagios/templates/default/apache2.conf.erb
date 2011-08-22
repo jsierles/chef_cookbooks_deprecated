@@ -1,0 +1,29 @@
+
+Listen 0.0.0.0:445
+<VirtualHost *:445>
+  ServerAdmin     <%= @node[:sysadmin_email] %>
+  ServerName      nagios.<% @node[:domain] %>
+  ServerAlias     nagios <% if @node[:public_domain] %>nagios.<%= @node[:public_domain] %><% end %>
+  DocumentRoot    <%= @node[:nagios][:webroot] %>
+  ErrorLog        /var/log/nagios3/apache_error.log
+  SSLEngine       On
+
+  ScriptAlias /cgi-bin/nagios3 /usr/lib/cgi-bin/nagios3
+  ScriptAlias /nagios3/cgi-bin /usr/lib/cgi-bin/nagios3
+  Alias /nagios3/stylesheets /etc/nagios3/stylesheets
+  Alias /nagios3/images /usr/share/nagios3/htdocs/images
+
+  # Enforce a decent level of encryption
+  SSLProtocol -ALL +SSLv3 +TLSv1
+  SSLCipherSuite ALL:!aNULL:!ADH:!eNULL:!LOW:!EXP:RC4+RSA:+HIGH:+MEDIUM
+
+  SSLCertificateFile       /var/chef/certificates/chef.<%= @node[:domain] %>.crt
+  SSLCertificateKeyFile    /var/chef/certificates/chef.<%= @node[:domain] %>.key
+
+  <Location />
+    AuthType Basic
+    AuthName "Nagios Server"
+    AuthUserFile /etc/nagios3/htpasswd.users
+    Require valid-user
+  </Location>
+</VirtualHost>

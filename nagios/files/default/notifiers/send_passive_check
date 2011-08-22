@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+require 'erb'
+require 'optparse'
+
+
+options = {}
+
+OptionParser.new do |opts|
+  opts.on('-s', '--service_name NAME', 'Nagios service description') { |name| options[:service_name] = name }
+  opts.on('-c', '--command COMMAND', 'Plugin command line') { |command| options[:command] = command }
+end.parse!
+
+result = `#{options[:command]}`
+exit_status = $?
+time = Time.now.to_i
+hostname = `hostname -s`.chomp
+command = "[#{time}] PROCESS_SERVICE_CHECK_RESULT;#{hostname};#{options[:service_name]};#{exit_status};#{result}"
+`ssh nagios@noc "echo '#{command}' >> /usr/local/nagios/var/rw/nagios.cmd"`

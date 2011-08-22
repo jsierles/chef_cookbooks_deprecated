@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+#
+
+require 'rubygems'
+require 'xmpp4r-simple'
+require 'drb'
+include Jabber
+
+jabber = Simple.new(ARGV[0], ARGV[1])
+AUTHORIZED_JIDS = ARGV[2].split(",")
+
+DRb.start_service("druby://127.0.0.1:10370", jabber)
+STATES = {0 => 'OK', 1 => "WARN", 2 => "CRIT"}
+
+def parse_nagios_status
+  status = File.read("/var/cache/nagios3/status.dat")
+  objects = status.split("\n\n")
+  all_objects = objects.collect do |o|
+    values_hash = {}
+    results = o.scan /\t(.+?)=(.+)/
+    results.each {|value| values_hash[value[0]] = value[1] }  
+    values_hash if values_hash['host_name']
+  end
+  all_objects.compact.sort_by {|ob| ob['host_name'] }
+end
+
+def show_state(obj)
+  "#{STATES[obj['current_state'].to_i]} #{obj['host_name']} #{obj['plugin_output']}"
+end
+
+def send_nagios_command(cmd)
+  File.open("/var/lib/nagios3/rw/nagios.cmd",'a') { |f| f.write("[#{Time.now.to_i}] #{cmd}\n") }
+end
+
+loop do
+  sleep 0.05
+  jabber.received_messages do |msg|
+    puts "RECEIVED: '#{msg.body}' from #{msg.from.strip}"
+    next unless AUTHORIZED_JIDS.include?(msg.from.strip.to_s)
+    case 
+      when msg.body =~ /^help/
+        help_msg ="Available commands:\n
+              broken - see all hosts and services with alerts\n
+              stats - see basic stats on all hosts and services\n
+              fullstats - see full stats on all hosts and services\n
+              host_downtime - set downtime for a host\n
+              msg - send a custom notification to all contacts for a host\n
+              <command> help - get usage details for a command"
+        jabber.deliver(msg.from, help_msg)
+      when msg.body =~ /^msg/
+        if msg.body =~ /help/
+          jabber.deliver(msg.from, 'Send a custom notification to all contacts for a host: msg <hostname> <message>')
+        else
+          args = msg.body.split
+          hostname = args[1]
+          send_nagios_command("SEND_CUSTOM_HOST_NOTIFICATION;#{hostname};1;#{msg.from.strip};#{args[3..-1].join(" ")}")
+          jabber.deliver(msg.from, "Sent custom notification")
+        end
+      when msg.body =~ /^broken/
+        objs = parse_nagios_status
+        txt = objs.collect {|o| show_state(o) if o['current_state'].to_i != 0 }.compact.join("\n")
+        txt = "All good!" if txt == ""
+        jabber.deliver(msg.from, txt)
+      when msg.body =~ /^host_downtime/
+        if msg.body =~ /help/
+          jabber.deliver(msg.from, 'Specify downtime for a host: host_downtime <hostname> <duration_in_minutes> <reason>')
+        else
+          args = msg.body.split
+          hostname = args[1]
+          
+          start_time = Time.now.to_i
+          end_time = (Time.now + (60 * 30)).to_i
+          duration = args[2].to_i * 60
+          # SCHEDULE_HOST_DOWNTIME;<host_name>;<start_time>;<end_time>;<fixed>;<trigger_id>;<duration>;<author>;<comment>
+          send_nagios_command("SCHEDULE_HOST_DOWNTIME;#{hostname};#{start_time};#{end_time};;;#{duration};#{msg.from.strip};#{args[3..-1].join(" ")}")
+          jabber.deliver(msg.from, "Set downtime for #{hostname}")
+        end
+      when msg.body =~ /^all/
+        objs = parse_nagios_status
+        txt = objs.collect {|o| show_state(o) }.join("\n")
+        jabber.deliver(msg.from, txt)
+    end        
+  end
+end

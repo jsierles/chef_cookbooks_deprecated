@@ -1,0 +1,41 @@
+define service {
+  use                     default-service
+  hostgroup_name          servers
+  service_description     Free Space All Disks
+  check_command           check_all_disks
+}
+
+define service {
+  use                     default-service
+  hostgroup_name          servers
+  service_description     Load Average
+  check_command           check_load
+}
+
+define service{
+  use                     default-service
+  hostgroup_name          servers
+  service_description     Free Memory
+  check_command           check_mem
+}
+
+define service{
+  use                     default-service
+  hostgroup_name          servers
+  service_description     Dell Hardware Status
+  check_command           check_nrpe!check_openmanage
+}
+
+define service{
+  use                     default-service
+  hostgroup_name          servers
+  service_description     Dell Hardware Status
+  check_command           check_nrpe!check_openmanage
+}
+
+define service {
+  use                     default-service
+  host_name               noc-01
+  service_description     Nagios HTTPS
+  check_command           check_https_content!nagios.sc-chi-int.37signals.com!'/cgi-bin/nagios3/status.cgi?hostgroup=all&style=hostdetail'!Updated
+}

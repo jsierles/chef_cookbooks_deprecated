@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+#
+# Detect old unicorn processes
+#
+
+puts "Usage: unicorn_detect_old_processes <appname>" if ARGV.size > 1
+
+def process_list(grep = nil)
+  `ps auwx | grep "unicorn #{ARGV[0]}" | grep -v master | #{grep ? "grep #{grep} |" : ""} grep -v grep | awk '{print $2}' | xargs`.split
+end
+
+current_release = File.read("/u/apps/#{ARGV[0]}/current/REVISION")[0,6]
+process_list_command = "ps auwx | grep unicorn | grep -v master | grep -v grep "
+
+current_release_pids = process_list(current_release)
+all_pids = process_list
+
+old_pids = all_pids - current_release_pids
+
+if old_pids.empty?
+  puts "OK: No old unicorn processes"
+  exit 0
+else
+  puts "CRITICAL: #{old_pids.size} old unicorn processes with pids #{old_pids.join(' ')}"
+  exit 2
+end

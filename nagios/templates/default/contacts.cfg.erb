@@ -1,0 +1,39 @@
+define contactgroup {
+  contactgroup_name sysadmin
+  alias             Sysadmins
+}
+
+define contactgroup {
+  contactgroup_name sysadmin-pagerduty
+  alias             Sysadmins PagerDuty
+}
+
+define contact {
+  name                            default-contact
+  service_notification_period     24x7
+  host_notification_period        24x7
+  service_notification_options    w,u,c,r,f,s
+  host_notification_options       d,u,r,f,s
+  service_notification_commands   service-notify-by-email, service-notify-by-jabber
+  host_notification_commands      host-notify-by-email, host-notify-by-jabber
+  register                        0
+}
+
+define contact {
+  name                            sms-contact
+  service_notification_period     24x7
+  host_notification_period        24x7
+  service_notification_options    w,u,c,r,f,s
+  host_notification_options       d,u,r,f,s
+  register                        0
+}
+
+define contact {
+  contact_name campfire
+  use   default-contact
+  alias Campfire
+  service_notification_commands   service-notify-by-campfire service-notify-ether
+  host_notification_commands      host-notify-by-campfire host-notify-ether
+  email  <%= @campfire[:email] %>
+  contactgroups sysadmin
+}

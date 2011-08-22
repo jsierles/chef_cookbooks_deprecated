@@ -1,0 +1,84 @@
+# host definitions
+
+define host {
+  use                     server
+  host_name               localhost
+  alias                   localhost
+  address                 127.0.0.1
+}
+
+define host {
+  name                            default-host
+  notifications_enabled           1
+  event_handler_enabled           1
+  flap_detection_enabled          1
+  failure_prediction_enabled      1
+  process_perf_data               1
+  retain_status_information       1
+  retain_nonstatus_information    1
+  notification_period             24x7
+  register                        0
+}
+
+
+define host {
+  name                    server
+  use                     default-host
+  check_period            24x7
+  check_interval          <%= nagios_interval(nagios_attr(:default_host)[:check_interval]) %>
+  retry_interval          <%= nagios_interval(nagios_attr(:default_host)[:retry_interval]) %>
+  max_check_attempts      <%= nagios_attr(:default_host)[:max_check_attempts] %>
+  check_command           check_tcp!22
+  notification_interval   <%= nagios_interval(nagios_attr(:default_host)[:notification_interval]) %>
+  notification_options    d,u,r
+  first_notification_delay  60
+  contact_groups          <%= nagios_attr(:default_contact_groups).join(",") %>, sysadmin-pagerduty
+  register                0
+}
+
+<% @hosts.each do |host| %>
+  <% unless host[:uptime] == nil || host['ipaddress'] == nil || host['hostname'] == nil %>
+define host {
+  use server
+  address <%= host['ipaddress'] %>
+  host_name <%= host['hostname'] %>
+  hostgroups servers<% if host[:roles] %><% host[:roles].each do |role| %>, <%= role %><% end %><% end %>
+}
+  <% end %>
+<% end %>
+
+<% if @devices %>
+<% @devices.each do |device| %>
+  <% unless device['ipaddress'] == nil || device['fqdn'] == nil %>
+define host {
+  use server
+  address <%= device['ipaddress'] %>
+  host_name <%= device['fqdn'] %>
+  alias <%= device['fqdn'].split(".").first %>
+  hostgroups devices, <%= device['type'] %>
+  <% if device['check_command'] %>
+  check_command <%= device['check_command'] %>
+  <% else %>
+  check_command check-host-alive
+  <% end %>
+}
+  <% end %>
+<% end %>
+<% end %>
+<% if @other_hosts %>
+<% @other_hosts.each do |host| %>
+  <% unless host['ipaddress'] == nil || host['fqdn'] == nil %>
+define host {
+  use server
+  address <%= host['ipaddress'] %>
+  host_name <%= host['fqdn'] %>
+  alias <%= host['fqdn'].split(".").first %>
+  <% if host['check_command'] %>
+  check_command <%= host['check_command'] %>
+  <% else %>
+  check_command check-host-alive
+  <% end %>
+}
+  <% end %>
+<% end %>
+<% end %>

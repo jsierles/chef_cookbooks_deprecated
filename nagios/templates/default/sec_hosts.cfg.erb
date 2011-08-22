@@ -1,0 +1,45 @@
+# host definitions
+
+define host {
+  use                     server
+  host_name               localhost
+  alias                   localhost
+  address                 127.0.0.1
+}
+
+define host {
+  name                            default-host
+  notifications_enabled           1
+  event_handler_enabled           1
+  flap_detection_enabled          1
+  failure_prediction_enabled      1
+  process_perf_data               1
+  retain_status_information       1
+  retain_nonstatus_information    1
+  notification_period             24x7
+  register                        0
+}
+
+
+define host {
+  name                    server
+  use                     default-host
+  check_period            24x7
+  check_interval          <%= nagios_interval(nagios_attr(:default_host)[:check_interval]) %>
+  retry_interval          <%= nagios_interval(nagios_attr(:default_host)[:retry_interval]) %>
+  max_check_attempts      <%= nagios_attr(:default_host)[:max_check_attempts] %>
+  check_command           check-host-alive-by-ssh
+  notification_interval   <%= nagios_interval(nagios_attr(:default_host)[:notification_interval]) %>
+  notification_options    d,u,r
+  contact_groups          <%= nagios_attr(:default_contact_groups).join(",") %>, sysadmin-pagerduty
+  register                0
+}
+
+<% @hosts.each do |host| %>
+define host {
+  use server
+  address <%= host['ipaddress'] %>
+  host_name <%= host['hostname'] %>
+  hostgroups servers
+}
+<% end %>

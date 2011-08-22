@@ -1,0 +1,54 @@
+server {
+  listen 443;
+  server_name nagios nagios.<%= @node[:domain] %>;
+  
+  root <%= @node[:nagios][:webroot] %>;
+  
+  set $forwarded_proto https;
+  ssl on;
+  ssl_protocols SSLv3 TLSv1;
+  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
+  
+  ssl_certificate /etc/chef/certificates/chef.<%= @node[:domain] %>.crt;
+  ssl_certificate_key /etc/chef/certificates/chef.<%= @node[:domain] %>.key;
+  
+  include /etc/nginx/helpers/headers.conf;
+
+  location / {
+    root  /usr/share/nagios3/htdocs;
+    index  index.html;
+ 
+    rewrite  ^/nagios3/images/(.*) /images/$1 break;
+    rewrite  ^/nagios3/stylesheets/(.*) /stylesheets/$1 break;
+    
+    satisfy	any;
+    allow	127.0.0.1;
+    allow	10.10.0.4;
+    allow	10.10.0.5;
+    deny	all;
+    auth_basic    "Restricted";
+    auth_basic_user_file  /etc/nagios3/htpasswd.users;
+  }
+ 
+  location ~ \.cgi$ {
+    root  /usr/lib/cgi-bin/nagios3;
+    rewrite  ^/cgi-bin/nagios3/(.*)\.cgi /$1.cgi break;
+
+    satisfy	any;
+    allow	127.0.0.1;
+    allow	10.10.0.4;
+    allow	10.10.0.5;
+    deny	all;
+    auth_basic    "Restricted";
+    auth_basic_user_file  /etc/nagios3/htpasswd.users;
+ 
+    include /etc/nginx/helpers/fcgi_params.conf;
+    
+    fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+    fastcgi_param  AUTH_USER      $remote_user;
+    fastcgi_param  REMOTE_USER    $remote_user;
+    
+    fastcgi_pass   127.0.0.1:47000;
+    
+  }
+}
