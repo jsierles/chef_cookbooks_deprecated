@@ -35,27 +35,20 @@ defaults
     acl <%= acl_name %> <%= acl_config[:rule] %>
     use_backend <%= acl_config[:backend_name]%> <%= acl_config[:backend_conditions] %>
     <% end -%>
-    <% end %>
+    <% end -%>
 
-    default_backend app_hosts
-
-    backend app_hosts
-      <% if @config[:monitoring] %>
-      option httpchk HEAD <%= @config[:monitoring][:path] %> HTTP/1.1\r\nHost:\ <%= @config[:monitoring][:host] %>
+    default_backend <%= @config[:default_backend] %>
+      
+    <% @config[:backends].each do |name, conf| -%>
+    backend <%= name %>
+      <% if conf[:monitoring][:path] %>
+      option httpchk HEAD <%= conf[:monitoring][:path] %> HTTP/1.1\r\nHost:\ <%= conf[:monitoring][:host] %>
       <% end -%>
-      <% @config[:backend_hosts].each do |name, ipaddress| %>
-      server <%= name.gsub("-", "_") %> <%= ipaddress %>:<%= @config[:app][:listen_port] %> <% if @config[:monitoring] %>check inter 5000<% end -%>
+      <% conf[:servers].each do |s_name, s_conf| %>
+      server <%= s_name.gsub("-", "_") %> <%= s_conf[:ipaddress] %>:<%= s_conf[:port] || conf[:port] %> <% if conf[:monitoring] %>check inter 5000<% end -%> <% if s_conf[:backup] %>backup<% end -%>
       <% end -%>
-        
-    <% if @config[:proxy_backends] %>
-    <% @config[:proxy_backends].each do |backend_name, servers| -%>
-    backend <%= backend_name %>
-    <% servers.each do |server| -%>
-      <%= server %>
     <% end -%>
-    <% end -%>
-    <% end -%>
-
+    
   listen <%= @name %>_admin 0.0.0.0:<%= @node[:haproxy][:admin_port] %>
     mode http
     stats uri /
