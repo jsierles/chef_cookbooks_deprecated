@@ -24,7 +24,7 @@ defaults
   errorfile 502 /etc/haproxy/500.http
   errorfile 503 /etc/haproxy/500.http
 
-  frontend <%= @name %> 0.0.0.0:<%= @node[:haproxy][:listen_port] %>
+  frontend <%= @name %> <%= @config[:listen_address] || "0.0.0.0" %>:<%=  @config[:listen_port] || @node[:haproxy][:listen_port] %>
 
     capture request header X-Forwarded-For len 16
     capture request header Host len 100
@@ -49,7 +49,7 @@ defaults
       <% end -%>
     <% end -%>
     
-  listen <%= @name %>_admin 0.0.0.0:<%= @node[:haproxy][:admin_port] %>
+  listen <%= @name %>_admin <%= @config[:listen_address] || "0.0.0.0" %>:<%= @node[:haproxy][:admin_port] %>
     mode http
     stats uri /
     
