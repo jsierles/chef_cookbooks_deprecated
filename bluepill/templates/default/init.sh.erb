@@ -14,7 +14,7 @@
 case "$1" in
   start)
     log_daemon_msg "Starting bluepill services"
-    for i in <%= @node[:bluepill][:conf_dir] %>/*conf.rb; do
+    for i in <%= @node[:bluepill][:conf_dir] %>/*; do
       <%= @node[:languages][:ruby][:bin_dir] %>/bluepill load $i
     done
     log_end_msg 0
@@ -23,7 +23,7 @@ case "$1" in
     echo "Stop is not implemented, since bluepill processes are run independently."
     ;;
   restart)
-    for i in <%= @node[:bluepill][:conf_dir] %>/*conf.rb; do
+    for i in <%= @node[:bluepill][:conf_dir] %>/*; do
       <%= @node[:languages][:ruby][:bin_dir] %>/bluepill load $i
     done
     ;;
