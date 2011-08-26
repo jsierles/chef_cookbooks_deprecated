@@ -16,7 +16,7 @@ destination d_loggly_system { tcp("logs.loggly.com", port(<%= @node[:loggly][:sy
 destination d_loggly_app { tcp("logs.loggly.com", port(<%= @node[:loggly][:app_log_port] %>)); };
 <% end %>
 
-destination d_syslog_remote { tcp("<%= @node[:syslog_ng][:default_host] %>", port(514)); };
+destination d_syslog_remote { tcp("<%= @node[:syslog_ng][:default_host] %>", port(5140)); };
 
 destination d_null { file("/dev/null.syslog"); };
 destination d_messages { file("/var/log/messages"); };
