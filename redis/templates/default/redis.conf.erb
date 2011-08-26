@@ -8,7 +8,7 @@ timeout <%= @timeout %>
 syslog-enabled yes
 syslog-ident <%= @name %>
 syslog-facility local0
-logfile stdout # sent to null when daemonized
+
 <% else %>
 logfile <%= @log_path %>
 loglevel notice
