@@ -71,7 +71,6 @@ filter f_thumbnail_build { match("thumbnail\.build"); };
 filter f_memcache { match("MemCacheStore"); };
 filter f_uploader { match("Uploader"); };
 filter f_s3 { match("__s3__"); };
-filter f_rails_junk { not match("CACHE") and not match("SHOW TABLES") and not match("SHOW COLUMNS") and not match("SHOW FIELDS") and not match("SET SQL_AUTO_IS_NULL"); };
 
 # filter staging logs
 filter f_staging { host("staging-.*"); };
@@ -129,10 +128,10 @@ log { source(s_remote); filter(f_<%= app[:id] %>); filter(f_s3); destination(<%=
 
 <% if app[:syslog_files][:logsort] -%>
 destination <%= app[:id] %>_logsort { program("/usr/local/bin/logsort.<%= app[:id] %>", log_fifo_size(30000)); };
-log { source(s_remote); filter(user); filter(f_<%= app[:id] %>); filter(f_rails_junk); destination(<%= app[:id] %>_logsort); flags(final); };	
+log { source(s_remote); filter(user); filter(f_<%= app[:id] %>); destination(<%= app[:id] %>_logsort); flags(final); };	
 <% else -%>
 destination <%= app[:id] %> { file("/u/logs/<%= app[:id] %>/rails.log", owner(app), group(app), perm(0644)); };
-log { source(s_remote); filter(user); filter(f_<%= app[:id] %>); filter(f_rails_junk); destination(<%= app[:id] %>); flags(final); };
+log { source(s_remote); filter(user); filter(f_<%= app[:id] %>); destination(<%= app[:id] %>); flags(final); };
 <% end -%>
 
 <% end -%>
@@ -161,8 +160,9 @@ destination d_mesg_remote { file("/u/logs/syslog/messages", owner(root), group(a
 destination d_auth_remote { file("/u/logs/syslog/secure", owner(root), group(app), perm(0644)); };
 destination d_mail_remote { file("/u/logs/syslog/maillog", owner(root), group(app), perm(0644), sync(10)); };
 destination d_spol_remote { file("/u/logs/syslog/spooler", owner(root), group(app), perm(0644)); };
-destination d_boot_remote { file("/u/logs/syslog/boot.log", owner(root), group(app), perm(0644)); };
+destination d_boot_remote { file("/u/logs/syslog/boot", owner(root), group(app), perm(0644)); };
 destination d_cron_remote { file("/u/logs/syslog/cron", owner(root), group(app), perm(0644)); };
+destination d_misc_remote { file("/u/logs/syslog/misc", owner(root), group(app), perm(0644)); };
 
 log { source(s_remote); filter(f_filter2); destination(d_mesg_remote); };
 log { source(s_remote); filter(f_filter3); destination(d_auth_remote); };
@@ -170,4 +170,6 @@ log { source(s_remote); filter(f_filter4); destination(d_mail_remote); };
 log { source(s_remote); filter(f_filter6); destination(d_spol_remote); };
 log { source(s_remote); filter(f_filter7); destination(d_boot_remote); };
 log { source(s_remote); filter(f_filter8); destination(d_cron_remote); };
+
+log { source(s_remote); destination(d_misc_remote); flags(final); };
 
