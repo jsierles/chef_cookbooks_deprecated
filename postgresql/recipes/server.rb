@@ -66,3 +66,7 @@ else
     action :delete
   end
 end
+
+service "postgresql" do
+  action [:enable, :start]
+end
