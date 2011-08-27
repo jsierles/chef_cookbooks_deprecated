@@ -21,11 +21,11 @@ if node[:active_applications]
     full_name = "#{app_name}_#{conf[:env]}"
     filename = "#{filename}_#{conf[:env]}.conf"
 
-    ssl_domains, non_ssl_domains = app[:environments][conf[:env]]["domains"].partition {|domain, opts| opts[:ssl] }
+    domain = app[:environments][conf[:env]]["domain"]
 
-    ssl_domains.each do |domain, _|
-      ssl_certificate domain
-    end
+    ssl_name = domain =~ /\*\.(.+)/ ? "#{$1}_wildcard" : domain
+    
+    ssl_certificate ssl_name
 
     template "/etc/nginx/sites-include/#{full_name}" do
       source "app_nginx_include.conf.erb"
@@ -36,7 +36,7 @@ if node[:active_applications]
     template "/etc/nginx/sites-available/#{full_name}" do
       source "app_nginx.conf.erb"
       variables :full_name => full_name, :conf => conf, :app_name => app_name, 
-                :ssl_domains => ssl_domains, :non_ssl_domains => non_ssl_domains, :app => app
+                :domain => domain, :ssl_name => ssl_name, :app => app
       notifies :reload, resources(:service => "nginx")
     end
 
