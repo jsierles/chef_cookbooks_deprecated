@@ -151,7 +151,7 @@ destination d_bluepill { file("/u/logs/syslog/bluepill", owner(root), group(app)
 log { source(s_remote); filter(f_local6); filter(f_bluepill); destination(d_bluepill); flags(final); };
 
 # Keepalived
-filter f_keepalived { program("keepalived"); };
+filter f_keepalived { program("Keepalived.*"); };
 destination d_keepalived { file("/u/logs/syslog/keepalived", owner(root), group(app), perm(0644)); };
 log { source(s_remote); filter(f_keepalived); destination(d_keepalived); flags(final); };
 
