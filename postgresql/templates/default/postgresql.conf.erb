@@ -10,7 +10,7 @@ max_connections = 100			# (change requires restart)
 
 unix_socket_directory = '/var/run/postgresql'		# (change requires restart)
 
-shared_buffers = 10240MB			# min 128kB, change requires restart
+shared_buffers = <%= @node[:postgresql][:shared_buffers]%>MB			# min 128kB, change requires restart
 
 datestyle = 'iso, dmy'
 
