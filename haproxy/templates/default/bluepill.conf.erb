@@ -1,3 +1,6 @@
+require 'fileutils'
+FileUtils.mkdir_p "/var/run/haproxy"
+
 Bluepill.application("<%= @full_name %>") do |app|
   app.process("<%= @short_name %>") do |process|
     process.start_command = "/usr/sbin/haproxy -D -f /etc/haproxy/<%= @short_name %>.cfg"
