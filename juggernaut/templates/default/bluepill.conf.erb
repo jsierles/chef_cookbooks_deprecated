@@ -2,9 +2,10 @@ Bluepill.application("juggernaut") do |app|
   app.working_dir = "/u/juggernaut"
   app.process("juggernaut") do |process|
     process.daemonize = true
-    process.start_command = "/usr/bin/juggernaut --port <%= @node.juggernaut.port %> 2>&1 |/usr/bin/logger -t juggernaut -p local6.notice"
+    process.start_command = "/usr/bin/juggernaut --port <%= @node.juggernaut.port %>"
     process.stop_command = "kill -QUIT {{PID}}"
     process.environment = {"REDISTOGO_URL" => "redis://nil:nil@<%= @node.juggernaut.redis_host %>:<%= @node.juggernaut.redis_port %>"}
     process.pid_file = "/var/run/juggernaut.pid"
+    process.stdout = process.stderr = "/u/juggernaut/juggernaut.log"
   end
 end
