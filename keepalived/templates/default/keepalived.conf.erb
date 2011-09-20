@@ -63,6 +63,15 @@ vrrp_instance <%= name %> {
       chk_<%= track %>
     }
     <% end -%>
+    
+    <% if vrrp[:notify_master] -%>
+    notify_master "<%= vrrp[:notify_master] %>"
+    <% end -%>
+
+    <% if vrrp[:notify_backup] -%>
+    notify_backup "<%= vrrp[:notify_backup] %>"
+    <% end -%>
+    
     <% end -%>
 }
 <% end -%>
