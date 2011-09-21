@@ -1,1 +1,1 @@
-default.bundler[:version] = '1.0.15'
+default.bundler[:version] = '1.0.18'
