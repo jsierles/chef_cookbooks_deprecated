@@ -11,6 +11,17 @@ source src {
     pipe("/proc/kmsg");
 };
 
+<% if @node[:syslog][:source_files] %>
+<% @node[:syslog][:source_files].each do |name, conf| -%>
+source <%= name %> {
+  file("<%= conf[:path] %>" follow_freq(1) flags(no-parse));
+};
+
+destination d_loggly_<%= name %> { tcp("logs.loggly.com", port(<%= conf[:port] %>)); };
+log { source(<%= name %>); destination(d_loggly_<%= name %>); flags(final); };
+<% end -%>
+<% end -%>
+
 <% if @node[:loggly][:enabled] == true %>
 destination d_loggly_system { tcp("logs.loggly.com", port(<%= @node[:loggly][:system_log_port] %>)); };
 destination d_loggly_app { tcp("logs.loggly.com", port(<%= @node[:loggly][:app_log_port] %>)); };
@@ -32,6 +43,7 @@ log { source(src); filter(f_bluepill_junk); destination(d_null); flags(final); }
 <% if @node[:active_applications] %>
 filter f_application { <%= @node[:active_applications].keys.map { |a| %W/program("#{a}")/ }.join(" or ") %>; };
 <% if @node[:loggly][:enabled] == true %>
+log { source(src); filter(f_application); destination(d_loggly_app); };
 log { source(src); filter(f_application); destination(d_loggly_app); };
 log { source(src); filter(f_application); destination(d_syslog_remote); flags(final); };
 <% else %>
