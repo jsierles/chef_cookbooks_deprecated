@@ -11,7 +11,7 @@ source src {
     pipe("/proc/kmsg");
 };
 
-<% if @node[:syslog][:source_files] %>
+<% if @node[:syslog] && @node[:syslog][:source_files] %>
 <% @node[:syslog][:source_files].each do |name, conf| -%>
 source <%= name %> {
   file("<%= conf[:path] %>" follow_freq(1) flags(no-parse));
