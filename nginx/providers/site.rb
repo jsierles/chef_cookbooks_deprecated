@@ -22,7 +22,7 @@ action :delete do
   action :disable
 
   if @site.exists
-    file "#{node[:nginx][:dir]}/sites-enabled/#{new_resource.name}.conf" do
+    file "#{node[:nginx][:dir]}/sites-available/#{new_resource.name}.conf" do
       action :delete
       notifies :reload, "service[nginx]"
     end  
