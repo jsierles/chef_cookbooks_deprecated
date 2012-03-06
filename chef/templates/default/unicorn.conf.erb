@@ -1,0 +1,6 @@
+worker_processes <%= @worker_count %>
+listen '<%= @socket_path %>', :backlog => 2048
+timeout 120
+pid "<%= @pid_path %>"
+stdout_path "/var/log/chef/unicorn.log"
+stderr_path "/var/log/chef/unicorn.log"

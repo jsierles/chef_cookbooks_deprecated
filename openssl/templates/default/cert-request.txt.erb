@@ -1,0 +1,12 @@
+[ req ]
+distinguished_name = req_distinguished_name
+prompt = no
+
+[ req_distinguished_name ]
+C                      = <%= @node[:openssl][:country_name] %>
+ST                     = <%= @node[:openssl][:state_name] %>
+L                      = <%= @node[:openssl][:locality_name]%>
+O                      = <%= @node[:openssl][:company_name]%>
+OU                     = <%= @node[:openssl][:organizational_unit_name]%>
+CN                     = <%= @fqdn %>
+emailAddress           = <%= @node[:openssl][:email_address] %>

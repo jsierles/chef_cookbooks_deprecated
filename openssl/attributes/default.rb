@@ -1,0 +1,6 @@
+openssl.default[:country_name] = "DE"
+openssl.default[:state_name] = "DE"
+openssl.default[:locality_name] = "Karlsruhe"
+openssl.default[:company_name] = "Sauspiel"
+openssl.default[:organizational_unit_name] = "Operations"
+openssl.default[:email_address] = "sysadmin@sauspiel.de"

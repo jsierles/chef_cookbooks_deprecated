@@ -1,0 +1,19 @@
+[couchdb]
+
+max_document_size = <%= @node[:couchdb][:max_document_size] %> ; bytes
+
+[httpd]
+port = <%= @node[:couchdb][:port] %>
+bind_address = <%= @node[:couchdb][:bind_address] %>
+
+[log]
+;level = debug
+
+[update_notification]
+;unique notifier name=/full/path/to/exe -with "cmd line arg"
+
+[couch_httpd_auth]
+;secret = replace this with a real secret
+
+[admins]
+;admin = mysecretpassword

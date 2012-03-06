@@ -1,0 +1,63 @@
+upstream chef_server {
+  server unix:/var/chef/sockets/chef-server-api.sock;
+}
+
+server {
+  listen 443;
+  server_name chef.<%= @node[:domain] %> chef;
+  root <%= @node[:chef][:server_api_path]%>/public;
+
+  ssl on;
+  ssl_protocols SSLv3 TLSv1;
+  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
+  
+  ssl_certificate /etc/chef/certificates/chef.<%= @node[:domain] %>.crt;
+  ssl_certificate_key /etc/chef/certificates/chef.<%= @node[:domain] %>.key;
+
+  include /etc/nginx/helpers/headers.conf;
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-Proto https;
+  
+  location / {
+    if (-f $request_filename) {
+      break;
+    }
+
+    if (!-f $request_filename) {
+      proxy_pass http://chef_server;
+      break;
+    }    
+  }
+}
+
+upstream chef_webui {
+  server unix:/var/chef/sockets/chef-server-webui.sock;
+}
+
+server {
+  listen 444;
+  server_name chefui.<%= @node[:domain] %> chefui;
+  root <%= @node[:chef][:server_webui_path]%>/public;
+  
+  ssl on;
+  ssl_protocols SSLv3 TLSv1;
+  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
+  
+  ssl_certificate /etc/chef/certificates/chef.<%= @node[:domain] %>.crt;
+  ssl_certificate_key /etc/chef/certificates/chef.<%= @node[:domain] %>.key;
+
+  include /etc/nginx/helpers/headers.conf;
+  proxy_set_header Host $host;
+  proxy_set_header X-Forwarded-Proto https;
+  
+  location / {
+    if (-f $request_filename) {
+      break;
+    }
+
+    if (!-f $request_filename) {
+      proxy_pass http://chef_webui;
+      break;
+    }
+  }
+}

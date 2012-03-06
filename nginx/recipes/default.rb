@@ -1,25 +1,5 @@
 package "nginx"
 
-# use this section for customized nginx packages
-
-# package "libossp-uuid16"
-# package "libperl5.10"
-# package "libgd2-noxpm"
-# package "libxslt1.1"
-# package "libgeoip1"
-# 
-# nginx_filename = [node[:nginx][:package_name], node[:nginx][:version], node[:nginx][:architecture]].join("_")+".deb"
-# 
-# dpkg_package node[:nginx][:package_name] do
-#   source "/home/system/pkg/debs/#{nginx_filename}"
-#   options "--force-confold"
-# end
-
-template "/etc/init.d/nginx" do
-  source "init.sh.erb"
-  mode 0755
-end
-
 template "/etc/logrotate.d/nginx" do
   source "logrotate.erb"
   owner "root"
@@ -35,35 +15,6 @@ directory node[:nginx][:log_dir] do
   mode 0755
   owner node[:nginx][:user]
   action :create
-end
-
-directory "/var/spool/nginx" do
-  owner "app"
-  group "app"
-end
-
-directory "/var/spool/nginx/client_body" do
-  owner node[:nginx][:user]
-end
-
-%w{nxensite nxdissite}.each do |nxscript|
-  template "/usr/sbin/#{nxscript}" do
-    source "#{nxscript}.erb"
-    mode 0755
-    owner "root"
-    group "root"
-  end
-end
-
-cookbook_file "#{node[:nginx][:dir]}/mime.types"
-
-template "nginx.conf" do
-  path "#{node[:nginx][:dir]}/nginx.conf"
-  source "nginx.conf.erb"
-  owner "root"
-  group "root"
-  mode 0644
-  notifies :reload, resources(:service => "nginx")
 end
 
 directory "/etc/nginx/helpers"
@@ -84,8 +35,4 @@ end
 
 service "nginx" do
   action [ :enable, :start ]
-end
-
-nginx_site "default" do
-  enable false
 end
