@@ -1,6 +1,4 @@
-package "couchdb" do
-  version node[:couchdb][:version]
-end
+package "couchdb"
 
 service "couchdb" do
   action :enable
