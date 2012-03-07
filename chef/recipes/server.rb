@@ -2,10 +2,12 @@ package "zlib1g-dev"
 package "libxml2-dev"
 package "sqlite3"
 package "libsqlite3-dev"
+package "libgecode-dev"
 
 include_recipe "chef::rabbitmq"
 include_recipe "openssl"
 include_recipe "bluepill"
+require_recipe "runit"
 require_recipe "nginx"
 require_recipe "couchdb"
 require_recipe "unicorn"
@@ -41,8 +43,9 @@ directory "/etc/chef/certificates" do
   mode "700"
 end
 
-bluepill_service "chef-solr"
-bluepill_service "chef-solr-indexer"
+
+runit_service "chef-solr"
+runit_service "chef-solr-indexer"
 
 template "/etc/chef/server.rb" do
   owner "chef"
@@ -73,6 +76,7 @@ end
     group "admin"
   end
   # unicorn setup
+  
   
   bluepill_monitor app do
     cookbook 'unicorn'
@@ -106,10 +110,11 @@ ssl_cert "/etc/chef/certificates" do
 end
 
 # install the wildcard cert for this domain
-ssl_certificate "*.#{node[:domain]}"
+# ssl_certificate "*.#{node[:domain]}"
 
 nginx_site "chef-server" do
   config_path "/etc/chef/server-vhost.conf"
+  action [:create, :enable]
 end
 
 cron "compact chef couchDB" do
