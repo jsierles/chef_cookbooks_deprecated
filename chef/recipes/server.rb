@@ -22,7 +22,7 @@ end
 
 user "chef" do
   comment "Chef user"
-  gid "admin"
+  gid "chef"
   uid 8000
   home "/var/chef"
   shell "/bin/bash"
@@ -32,7 +32,7 @@ end
    /var/chef/site-cookbooks /var/chef/cookbook-tarballs /var/chef/sandboxes /var/chef/checksums).each do |dir|
   directory dir do
     owner "chef"
-    group "admin"
+    group "chef"
     mode 0775
   end
 end
@@ -49,7 +49,7 @@ runit_service "chef-solr-indexer"
 
 template "/etc/chef/server.rb" do
   owner "chef"
-  group "admin"
+  group "chef"
   mode 0664
   source "server.rb.erb"
   action :create
@@ -57,7 +57,7 @@ end
 
 template "/etc/chef/client.rb" do
   owner "chef"
-  group "admin"
+  group "chef"
   mode 0664
   source "client.rb.erb"
   action :create
@@ -73,7 +73,7 @@ end
               :socket_path =>  "/var/chef/sockets/#{app}.sock",
               :pid_path => "/var/chef/pids/#{app}.pid"
     owner "chef"
-    group "admin"
+    group "chef"
   end
   # unicorn setup
   
@@ -85,7 +85,7 @@ end
     preload false
     interval 30
     user "chef"
-    group "admin"
+    group "chef"
     memory_limit 250 # megabytes
     cpu_limit 50 # percent
     rack_config_path "#{node[:languages][:ruby][:gems_dir]}/gems/#{app}-#{node[:chef][:server_version]}/config.ru"
