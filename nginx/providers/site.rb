@@ -7,24 +7,26 @@ action :create do
 end
  
 action :enable do
-  if !@site.exists
-    action :create
-  end
-  
+  # TODO: create if not created
+    
   link "#{node[:nginx][:dir]}/sites-enabled/#{new_resource.name}.conf" do
     to "#{node[:nginx][:dir]}/sites-available/#{new_resource.name}.conf"
-    notifies :reload, "service[nginx]"
+    
+    notifies :reload, resources(:service => "nginx")
+    
+    # Using old notifies style due to bug: http://tickets.opscode.com/browse/CHEF-2404
+    # notifies :reload, "service[nginx]"
   end
 end
  
 action :delete do
 
-  action :disable
-
+  # TODO: disable before deleting
+  
   if @site.exists
-    file "#{node[:nginx][:dir]}/sites-available/#{new_resource.name}.conf" do
+    file "#{node[:nginx][:dir]}/sites-enabled/#{new_resource.name}.conf" do
       action :delete
-      notifies :reload, "service[nginx]"
+      notifies :reload, resources(:service => "nginx")
     end  
   end
 end
@@ -33,7 +35,7 @@ action :disable do
   if @site.enabled
     file "#{node[:nginx][:dir]}/sites-enabled/#{new_resource.name}.conf" do
       action :delete
-      notifies :reload, "service[nginx]"
+      notifies :reload, resources(:service => "nginx")
     end
   end
 end
