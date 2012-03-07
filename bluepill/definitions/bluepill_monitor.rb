@@ -1,9 +1,9 @@
 define :bluepill_monitor, :enable => true, :rack_config_path => false do
   include_recipe "bluepill"
-  config_path = "#{node[:bluepill][:config_dir]}/#{params[:name]}.conf.rb"
+  config_path = "#{node[:bluepill][:conf_dir]}/#{params[:name]}.conf.rb"
 
   execute "load-bluepill-#{params[:name]}" do
-    command "bluepill load #{node[:bluepill][:config_dir]}/#{params[:name]}.conf.rb"
+    command "bluepill load #{node[:bluepill][:conf_dir]}/#{params[:name]}.conf.rb"
     action :nothing
   end
   

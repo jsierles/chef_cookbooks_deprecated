@@ -77,7 +77,6 @@ end
   end
   # unicorn setup
   
-  
   bluepill_monitor app do
     cookbook 'unicorn'
     source "bluepill.conf.erb"
