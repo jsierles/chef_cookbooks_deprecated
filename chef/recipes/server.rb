@@ -22,7 +22,6 @@ end
 
 user "chef" do
   comment "Chef user"
-  gid "chef"
   uid 8000
   home "/var/chef"
   shell "/bin/bash"
