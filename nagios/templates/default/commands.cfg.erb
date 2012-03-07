@@ -551,13 +551,3 @@ define command {
   command_name  service-notify-by-jabber
   command_line  <%= @node[:nagios][:notifiers_dir] %>/jabber -j $CONTACTADDRESS1$ -m "$SERVICEDESC$ $SERVICESTATE$ $HOSTALIAS$ $NOTIFICATIONTYPE$ $SERVICEOUTPUT$ : $NOTIFICATIONCOMMENT$"
 }
-
-define command {
-  command_name  service-notify-ether
-  command_line  /usr/bin/curl -X POST -d 'nagios_alert[description]=$SERVICEDESC$&nagios_alert[state]=$SERVICESTATE$&nagios_alert[host_alias]=$HOSTALIAS$&nagios_alert[notification_type]=$NOTIFICATIONTYPE$&nagios_alert[output]=$SERVICEOUTPUT$&nagios_alert[notification_comments]=$NOTIFICATIONCOMMENT$&nagios_alert[type]=service' http://ether.sc-chi-int.37signals.com/nagios_alerts
-}
-
-define command {
-  command_name  host-notify-ether
-  command_line  /usr/bin/curl -X POST -d 'nagios_alert[state]=$HOSTSTATE$&nagios_alert[host_alias]=$HOSTALIAS$&nagios_alert[notification_type]=$NOTIFICATIONTYPE$&nagios_alert[output]=$HOSTOUTPUT$&nagios_alert[notification_comments]=$NOTIFICATIONCOMMENT$&nagios_alert[type]=host' http://ether.sc-chi-int.37signals.com/nagios_alerts
-}
