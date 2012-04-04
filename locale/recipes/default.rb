@@ -1,0 +1,1 @@
+template "/etc/default/locale"
