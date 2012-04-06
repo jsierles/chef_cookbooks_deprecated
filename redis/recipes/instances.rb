@@ -4,7 +4,7 @@ if node[:redis][:instances]
   node[:redis][:instances].each do |name, config|  
 
     default_config = {
-      "name" => "redis_#{name}",
+      "name" => "#{config[:prefix]}redis_#{name}",
       "log_path" => "#{node[:redis][:root_path]}/#{name}/redis.log",
       "pid_path" => "#{node[:redis][:root_path]}/#{name}/redis.pid",
       "data_directory" => "#{node[:redis][:root_path]}/#{name}/data",
