@@ -304,7 +304,7 @@ elif [ "$1" = "run" ]; then
 
 elif [ "$1" = "start" ] ; then
 
-  if [ ! -z "$CATALINA_PID" ]; then
+  if [ ! -z "$CATALINA_PID" ] && ! kill -0 $CATALINA_PID; then
     if [ -s "$CATALINA_PID" ]; then
       echo "PID file ($CATALINA_PID) found. Is Tomcat still running? Start aborted."
       exit 1
@@ -324,8 +324,7 @@ elif [ "$1" = "start" ] ; then
       -Dcatalina.base="$CATALINA_BASE" \
       -Dcatalina.home="$CATALINA_HOME" \
       -Djava.io.tmpdir="$CATALINA_TMPDIR" \
-      org.apache.catalina.startup.Bootstrap "$@" start \
-      2>&1 |/usr/bin/logger -t `basename $CATALINA_BASE` -p local5.notice &
+      org.apache.catalina.startup.Bootstrap "$@" start &
 
   else
     "$_RUNJAVA" "$LOGGING_CONFIG" $JAVA_OPTS $CATALINA_OPTS \
@@ -333,9 +332,7 @@ elif [ "$1" = "start" ] ; then
       -Dcatalina.base="$CATALINA_BASE" \
       -Dcatalina.home="$CATALINA_HOME" \
       -Djava.io.tmpdir="$CATALINA_TMPDIR" \
-      org.apache.catalina.startup.Bootstrap "$@" start \
-      2>&1 |/usr/bin/logger -t `basename $CATALINA_BASE` -p local5.notice &
-
+      org.apache.catalina.startup.Bootstrap "$@" start &
   fi
 
   if [ ! -z "$CATALINA_PID" ]; then
