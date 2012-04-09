@@ -1,0 +1,10 @@
+Bluepill.application("<%= @name %>_solr") do |app|
+  app.process("<%= @name %>_solr") do |process|
+    process.start_command = "/etc/init.d/<%= @name%>_solr_init start"
+    process.start_command = "/etc/init.d/<%= @name%>_solr_init stop"
+    process.start_command = "/etc/init.d/<%= @name%>_solr_init restart"
+    process.pid_file = "<%= @node[:solr][:multi_tomcat_root] %>/<%= @name %>-solr/pids/tomcat6.pid"
+    process.stdout = "<%= @node[:solr][:multi_tomcat_root] %>/<%= @name %>-solr/logs/stdout.log"
+    process.stderr = "<%= @node[:solr][:multi_tomcat_root] %>/<%= @name %>-solr/logs/stderr.log"
+  end
+end

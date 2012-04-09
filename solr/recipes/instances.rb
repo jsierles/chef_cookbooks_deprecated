@@ -110,7 +110,7 @@ node[:solr][:instances].each do |app, config|
     only_if { File.exists?("#{node[:solr][:multi_tomcat_root]}/#{app}-solr/conf/logging.properties") }
   end
     
-  template "/etc/init.d/#{app}_solr" do
+  template "/etc/init.d/#{app}_solr_init" do
     source "multi_init.erb"
     variables(:app => app, :config => config)
     owner "root"
@@ -118,9 +118,13 @@ node[:solr][:instances].each do |app, config|
     backup false
   end
   
-  service "#{app}_solr" do
-    supports [ :status, :restart ]
-    action [ :enable, :start ]
-  end
   
+  template "#{node[:bluepill][:conf_dir]}/#{app}_solr.pill" do
+    source "bluepill.conf.erb"    
+    variables :name => app
+  end
+
+  bluepill_service "#{app}_solr" do
+    action [:enable, :load, :start]
+  end  
 end
