@@ -41,8 +41,13 @@ directory "/etc/chef/certificates" do
   mode "700"
 end
 
+execute "install-chef-solr" do
+  command "chef-solr-installer"
+  not_if { File.exists?("/var/chef/solr") }
+end
+
 runit_service "chef-solr"
-runit_service "chef-solr-indexer"
+runit_service "chef-expander"
 
 template "/etc/chef/server.rb" do
   owner "chef"
