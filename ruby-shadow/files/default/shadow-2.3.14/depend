@@ -1,0 +1,9 @@
+ifneq (,$(findstring 1.9,$(ruby_version)))
+	io_lib=$(hdrdir)/ruby/ruby/io.h
+	hdr=$(hdrdir)/ruby/ruby.h
+else
+	io_lib=$(hdrdir)/ruby/rubyio.h
+	hdr=$(hdrdir)/ruby.h
+endif
+	
+shadow.o: shadow.c $(hdr) $(io_lib)
