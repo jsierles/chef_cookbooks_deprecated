@@ -17,16 +17,6 @@ location /nginx_status {
   deny all;
 }
 
-location /_raindrops {
-  access_log off;
-  <% node[:networks].each do |name, addresses| %>
-  allow <%= addresses[:network] %>/<%= IPAddr.new(addresses[:netmask]).to_i.to_s(2).count("1") %>;
-  <% end %>
-  allow 127.0.0.1/32;
-  deny all;
-  proxy_pass http://<%= @full_name %>;
-}
-
 location / {
 
   # use for cloudfront asset cache busting

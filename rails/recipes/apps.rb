@@ -21,7 +21,7 @@ if node[:active_applications]
     full_name = "#{app_name}_#{conf[:env]}"
     filename = "#{filename}_#{conf[:env]}.conf"
 
-    domain = app[:environments][conf[:env]]["domain"]
+    domain = app["environments"][conf["env"]]["domain"]
 
     ssl_name = domain =~ /\*\.(.+)/ ? "#{$1}_wildcard" : domain
     
@@ -33,7 +33,7 @@ if node[:active_applications]
       notifies :reload, resources(:service => "nginx")
     end
               
-    template "/etc/nginx/sites-available/#{full_name}" do
+    template "/etc/nginx/sites-available/#{full_name}.conf" do
       source "app_nginx.conf.erb"
       variables :full_name => full_name, :conf => conf, :app_name => app_name, 
                 :domain => domain, :ssl_name => ssl_name, :app => app
@@ -71,8 +71,12 @@ if node[:active_applications]
       action [:enable, :load, :start]
     end
     
+    nginx_site full_name do
+      action :enable
+    end
+    
     logrotate full_name do
-      files "/u/apps/#{app_name}/current/log/*.log"
+      files ["/u/apps/#{app_name}/current/log/*.log"]
       frequency "daily"
       rotate_count 14
       compress true

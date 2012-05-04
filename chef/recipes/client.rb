@@ -15,7 +15,7 @@ directory "/var/log/chef"
 
 logrotate "chef-client" do
   rotate_count 5
-  files "/var/log/chef/*.log"
+  files ["/var/log/chef/*.log"]
 end
 
 execute "Register client node with chef server" do

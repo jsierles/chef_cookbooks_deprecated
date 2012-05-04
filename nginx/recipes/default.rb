@@ -33,6 +33,14 @@ node[:nginx][:extras].each do |ex|
   end
 end  
 
+template "#{node[:nginx][:dir]}/nginx.conf" do
+  source "nginx.conf.erb"
+  owner "root"
+  group "root"
+  mode 0644
+  notifies :reload, resources(:service => "nginx")
+end
+
 service "nginx" do
   action [ :enable, :start ]
 end
