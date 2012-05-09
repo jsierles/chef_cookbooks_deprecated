@@ -51,16 +51,16 @@ if node[:active_applications]
       :listen_port => app[:listen_port] || 8600
     }
 
-    template "#{node[:unicorn][:config_path]}/#{full_name}" do
-      mode 0644
-      cookbook "unicorn"
-      source "unicorn.conf.erb"
-      variables common_variables
-    end
-
+    # template "#{node[:unicorn][:config_path]}/#{full_name}" do
+    #   mode 0644
+    #   cookbook "unicorn"
+    #   source "unicorn.conf.erb"
+    #   variables common_variables
+    # end
+    # 
     template "#{node[:bluepill][:conf_dir]}/#{full_name}.pill" do
       mode 0644
-      source "bluepill_unicorn.conf.erb"
+      source "bluepill_puma.conf.erb"
       variables common_variables.merge(
         :interval => node[:rails][:monitor_interval],
         :memory_limit => app[:memory_limit] || node[:rails][:memory_limit],

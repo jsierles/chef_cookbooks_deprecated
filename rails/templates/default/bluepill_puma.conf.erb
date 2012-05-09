@@ -1,0 +1,23 @@
+ENV['PATH'] = "#{ENV['PATH']}:/usr/local/bin"
+
+Bluepill.application("<%= @full_name %>") do |app|
+  app.working_dir = "<%= @app_root %>/current"
+  <% if @environment_vars %>
+  app.environment = {<% @environment_vars.each do |k, v| %><%= "\"#{k}\" => \"#{v}\"" %><% end %>}
+  <% end %>
+  app.process("<%= @full_name %>") do |process|
+    process.start_command = "/usr/bin/env RAILS_ENV=<%= @env %> /usr/local/bin/bundle exec puma <%= @app_root %>/current/config.ru -b unix://<%= @app_root %>/shared/sockets/application.sock"
+    process.daemonize = true
+    process.stop_command = "kill -QUIT {{PID}}"
+    process.restart_command = "kill -USR2 {{PID}}"
+    process.stdout = "<%= @app_root %>/shared/log/puma.log"
+    process.stderr = "<%= @app_root %>/shared/log/puma.log"
+    process.pid_file = "<%= @app_root %>/shared/tmp/pids/puma.pid"
+    process.uid = "<%= @user %>"
+    process.gid = "<%= @group %>"
+
+    process.start_grace_time = 30.seconds
+    process.stop_grace_time = 30.seconds
+    process.restart_grace_time = 10.seconds
+  end
+end
