@@ -5,7 +5,9 @@ default.nginx[:log_dir] = "/var/log/nginx"
 default.nginx[:user]    = "www-data"
 default.nginx[:group]   = "www-data"
 default.nginx[:binary]  = "/usr/sbin/nginx"
-default.nginx[:gzip_types] = [ "text/plain", "text/css", "application/javascript", "application/x-javascript", "text/xml", "application/xml", "application/xml+rss", "text/javascript" ]
+default.nginx[:gzip_types] = [ "text/plain", "text/css", "application/javascript", "application/x-javascript", "text/xml",
+                               "application/xml", "application/xml+rss", "text/javascript", "application/vnd.ms-fontobject",
+                               "application/x-font-ttf", "font/opentype" ]
 default.nginx[:version] = "0.8.34-queuetime1"
 default.nginx[:expires][:enabled] = true
 default.nginx[:expires][:regex] = '^/(application|javascripts|stylesheets|images|sprockets|favicon)[/\.]'
