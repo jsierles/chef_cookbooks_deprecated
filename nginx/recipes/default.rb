@@ -17,6 +17,8 @@ directory node[:nginx][:log_dir] do
   action :create
 end
 
+cookbook_file "/etc/nginx/mime.types"
+
 directory "/etc/nginx/helpers"
 
 # helpers to be included in your vhosts
