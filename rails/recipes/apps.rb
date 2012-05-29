@@ -60,7 +60,7 @@ if node[:active_applications]
     # 
     template "#{node[:bluepill][:conf_dir]}/#{full_name}.pill" do
       mode 0644
-      source "bluepill_puma.conf.erb"
+      source "bluepill_unicorn.conf.erb"
       variables common_variables.merge(
         :interval => node[:rails][:monitor_interval],
         :memory_limit => app[:memory_limit] || node[:rails][:memory_limit],
