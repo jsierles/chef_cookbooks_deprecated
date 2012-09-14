@@ -41,7 +41,7 @@ defaults
       
     <% @config[:backends].each do |name, conf| -%>
     backend <%= name %>
-      <% if conf[:monitoring][:path] %>
+      <% if conf[:monitoring] && conf[:monitoring][:path] %>
       option httpchk HEAD <%= conf[:monitoring][:path] %> HTTP/1.1\r\nHost:\ <%= conf[:monitoring][:host] %>
       <% end -%>
       <% conf[:servers].each do |s_name, s_conf| %>
