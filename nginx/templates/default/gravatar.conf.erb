@@ -1,0 +1,14 @@
+proxy_cache_path  /var/cache/nginx/proxy-cache levels=1:2    keys_zone=gravatar:100m;
+
+server {
+  listen       80;
+  server_name  g1.charmhq.com g2.charmhq.com g3.charmhq.com g4.charmhq.com gravatar.charmhq.com;
+
+  location / {
+    proxy_cache gravatar;
+    proxy_cache_valid 200 7d;
+    proxy_pass        http://0.gravatar.com/;
+    expires 30d;
+    add_header Cache-Control public;
+  }
+}
