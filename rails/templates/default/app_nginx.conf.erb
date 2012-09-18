@@ -16,19 +16,12 @@ server {
   <% end -%>
 }
 
-server {  
-  listen 443;
-  server_name <%= @domain %>;
-  
-  ssl on;
-  ssl_certificate /etc/ssl_certs/<%=  @ssl_name %>_combined.crt;
-  ssl_certificate_key /etc/ssl_certs/<%=  @ssl_name %>.key;
-
-  # for PCI compliance
-  ssl_protocols SSLv3 TLSv1;
-  ssl_ciphers ALL:!ADH:RC4+RSA:+HIGH:+MEDIUM:-LOW:-SSLv2:-EXP;
-  
-  proxy_set_header X-Forwarded-Proto 'https';
+server {
+  listen 8500;
+  server_name *.charmhq.com;
+  <% if @app[:ssl_only] -%>
+    proxy_set_header X-Forwarded-Proto https;
+  <% end -%>
   
   include /etc/nginx/sites-include/<%= @full_name %>;
 }
