@@ -11,7 +11,7 @@ define :ssl_certificate do
   
   template "#{node[:ssl_certificates][:path]}/#{name}.crt" do
     source "cert.erb"
-    mode "0640"
+    mode "0644"
     cookbook "ssl_certificates"
     owner "root"
     group "www-data"
@@ -20,7 +20,7 @@ define :ssl_certificate do
 
   template "#{node[:ssl_certificates][:path]}/#{name}.key" do
     source "cert.erb"
-    mode "0640"
+    mode "0644"
     cookbook "ssl_certificates"
     owner "root"
     group "www-data"
@@ -29,7 +29,7 @@ define :ssl_certificate do
 
   template "#{node[:ssl_certificates][:path]}/#{name}_combined.crt" do
     source "cert.erb"
-    mode "0640"
+    mode "0644"
     cookbook "ssl_certificates"
     owner "root"
     group "www-data"
@@ -37,10 +37,20 @@ define :ssl_certificate do
     variables :cert => cert["cert"], :extra => extra
   end
 
+  template "#{node[:ssl_certificates][:path]}/#{name}_combined_with_key.crt" do
+    source "cert.erb"
+    mode "0644"
+    cookbook "ssl_certificates"
+    owner "root"
+    group "www-data"
+    extra = cert["intermediate"] ? cert["intermediate"]+cert["key"] : cert["key"]
+    variables :cert => cert["cert"], :extra => extra
+  end
+
   if cert["intermediate"]
     template "#{node[:ssl_certificates][:path]}/#{name}_intermediate.crt" do
       source "cert.erb"
-      mode "0640"
+      mode "0644"
       cookbook "ssl_certificates"
       owner "root"
       group "www-data"
