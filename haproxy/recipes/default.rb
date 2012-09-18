@@ -1,12 +1,12 @@
-remote_file "/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb" do
-  source "#{node[:package_url]}/haproxy_1.4.15-2~lucid.1_amd64.deb"
-  not_if { File.exists?("/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb") }
-end
-
-dpkg_package "haproxy" do
-  source "/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb"
-  only_if { File.exists?("/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb") }
-end
+# remote_file "/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb" do
+#   source "#{node[:package_url]}/haproxy_1.4.15-2~lucid.1_amd64.deb"
+#   not_if { File.exists?("/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb") }
+# end
+# 
+# dpkg_package "haproxy" do
+#   source "/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb"
+#   only_if { File.exists?("/tmp/haproxy_1.4.15-2~lucid.1_amd64.deb") }
+# end
 
 include_recipe "nginx"
 

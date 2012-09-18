@@ -24,8 +24,9 @@ defaults
   errorfile 502 /etc/haproxy/500.http
   errorfile 503 /etc/haproxy/500.http
 
-  frontend <%= @name %> <%= @config[:listen_address] || "0.0.0.0" %>:<%=  @config[:listen_port] || @node[:haproxy][:listen_port] %>
+  frontend <%= @name %> 
 
+    bind <%= @config[:listen_address] || "*" %>:<%=  @config[:listen_port] || @node[:haproxy][:listen_port] -%><% if @config[:ssl] -%> ssl crt <%= @config[:ssl][:cert_path] %>  prefer-server-ciphers<% end -%>
     capture request header X-Forwarded-For len 16
     capture request header Host len 100
     capture request header X-Request-Id len 36
@@ -45,7 +46,7 @@ defaults
       option httpchk HEAD <%= conf[:monitoring][:path] %> HTTP/1.1\r\nHost:\ <%= conf[:monitoring][:host] %>
       <% end -%>
       <% conf[:servers].each do |s_name, s_conf| %>
-      server <%= s_name.gsub("-", "_") %> <%= s_conf[:ipaddress] %>:<%= s_conf[:port] || conf[:port] %> <% if conf[:monitoring] %>check inter 5000<% end -%> <% if s_conf[:backup] %>backup<% end -%>
+      server <%= s_name.gsub("-", "_") %> <%= s_conf[:ipaddress] %>:<%= s_conf[:port] || conf[:port] %> check inter 5000 <% if s_conf[:backup] %>backup<% end -%>
       <% end -%>
     <% end -%>
     
