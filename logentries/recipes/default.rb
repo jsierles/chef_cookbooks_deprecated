@@ -1,25 +1,13 @@
 package "python-simplejson"
 
-deb = "logentries_1.1.1_all.deb"
-debpath = "/var/tmp/#{deb}"
-
-remote_file "#{debpath}" do
-  source "#{node[:package_url]}/#{deb}"
-  not_if { File.exists?("#{debpath}")}
-end
-
-dpkg_package deb do
-  source "#{debpath}"
-  action :install
-  only_if { File.exists?("#{debpath}")}
-end
-
-deb = "logentries-daemon_0.7.2_all.deb"
-debpath = "/var/tmp/#{deb}"
-
-remote_file "#{debpath}" do
-  source "#{node[:package_url]}/#{deb}"
-  not_if { File.exists?("#{debpath}")}
+apt_repository "logentries" do
+  uri "http://rep.logentries.com"
+  distribution "squeeze"
+  components ["main"]
+  keyserver "pgp.mit.edu"
+  key "C43C79AD"
+  action :add
+  notifies :run, "execute[apt-get update]", :immediately
 end
 
 directory "/etc/le"
@@ -28,9 +16,8 @@ template "/etc/le/config" do
   not_if { File.exists?("/etc/le/config") }
 end
 
-execute "install logentries daemon" do
-  command "echo 'Y' | dpkg -i #{debpath}"
-  not_if "dpkg -l | grep logentries-daemon | grep ii"
+package "logentries-daemon" do
+  action :install
 end
 
 execute "register agent" do
