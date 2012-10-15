@@ -6,7 +6,7 @@ preload_app <%= @preload ? "true" : "false" %>
 timeout 300
 listen "#{app_root}/shared/sockets/unicorn.sock", :backlog => 2048
 listen "0.0.0.0:<%= @listen_port %>"
-pid "#{app_root}/current/tmp/pids/unicorn.pid"
+pid "#{app_root}/shared/pids/unicorn.pid"
 stderr_path "#{app_root}/shared/log/unicorn.log"
 stdout_path "#{app_root}/shared/log/unicorn.log"
 
