@@ -5,7 +5,6 @@ package "libsqlite3-dev"
 package "libgecode-dev"
 
 include_recipe "chef::rabbitmq"
-include_recipe "openssl"
 include_recipe "bluepill"
 require_recipe "runit"
 require_recipe "nginx"
