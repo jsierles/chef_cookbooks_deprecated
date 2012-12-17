@@ -53,7 +53,7 @@ def load_current_resource
   Chef::Log.debug("Checking status of service #{new_resource.service_name}")
 
   begin
-    if run_command_with_systems_locale(:command => "#{node['bluepill']['bin']} status #{new_resource.service_name}") == 0
+    if run_command_with_systems_locale(:command => "#{node['bluepill']['bin']} #{new_resource.service_name} status") == 0
       @bp.running(true)
     end
   rescue Chef::Exceptions::Exec
