@@ -1,6 +1,7 @@
 require_recipe "nginx"
 
 directory "/var/cache/nginx/proxy-cache" do
+  recursive true
   owner "www-data"
 end
 
